@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>neurolab – How Neurons Talk to Each Other</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap">
+<style>
+:root{--bg:#fbf8f3;--ink:#2b2b2b;--mut:#6f6a62;--line:#e6e0d4;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171612;--ink:#f1ede4;--mut:#a39d90;--line:#2f2d26}}
+:root[data-theme="dark"]{--bg:#171612;--ink:#f1ede4;--mut:#a39d90;--line:#2f2d26}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.65 Inter,system-ui,-apple-system,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:1260px;margin:0 auto;padding:0 clamp(18px,5vw,64px)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:22px 0;font:400 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;gap:12px;flex-wrap:wrap}
+.top a,.top button{color:var(--mut);text-decoration:none;margin-left:16px;background:none;border:0;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0}
+.top .wm{font:500 24px Newsreader,Georgia,serif;color:var(--ink);text-transform:none;letter-spacing:0;margin:0}
+.eb{font:400 13px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:0 0 14px}
+.hero{padding:100px 0 70px;max-width:920px}
+h1{font:400 clamp(44px,7vw,92px)/1.02 Newsreader,Georgia,serif;letter-spacing:-.02em;margin:0 0 26px}
+.lead{font-size:22px;color:var(--mut);max-width:640px;margin:0}
+.step{display:grid;grid-template-columns:minmax(0,350px) minmax(0,1fr);gap:clamp(28px,5vw,72px);padding:84px 0;border-top:1px solid var(--line)}
+h2{font:400 clamp(30px,3.6vw,44px)/1.1 Newsreader,Georgia,serif;margin:0 0 16px;letter-spacing:-.01em}
+.txt{align-self:start;position:sticky;top:24px}.txt p,.txt li{color:var(--mut);margin:0 0 12px}.txt ul{padding-left:18px;margin:0 0 12px}
+.cream{background:#fbf8f3;color:#2b2b2b;border:1px dashed #c9c1ae;border-radius:14px;position:relative;overflow:hidden}
+.pad{padding:18px}
+.btn{font:500 12px 'JetBrains Mono',monospace;background:#fbf8f3;color:#2b2b2b;border:1px solid #2b2b2b;border-radius:6px;padding:6px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover,.btn.on,.btn.p{background:#2b2b2b;color:#fbf8f3}
+.btn i{width:9px;height:9px;border-radius:50%;border:1px solid #2b2b2b}
+select.btn,input[type=range]{font:500 12px 'JetBrains Mono',monospace}
+label.btn{cursor:pointer}
+.stage{height:min(76vh,660px);background:radial-gradient(rgba(43,43,43,.08) 1px,transparent 1.2px) 0 0/22px 22px,#f6f1e7}
+.stage.fs{position:fixed;inset:0;z-index:100;height:100dvh;border-radius:0;border:0}
+canvas#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}#lines line{stroke:#2b2b2b;stroke-opacity:.45;stroke-width:1}
+.lb{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;font:italic 400 13px Newsreader,Georgia,serif;color:#2b2b2b;background:rgba(251,248,243,.88);padding:1px 7px;border-radius:4px}
+.lb::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--c);margin-right:6px;border:1px solid #2b2b2b}
+.float{position:absolute;z-index:3;background:rgba(251,248,243,.94);border:1px solid #d6cfbe;border-radius:10px;padding:9px 11px}
+.chartc{left:12px;top:12px;width:240px}#chart{width:100%;height:110px;display:block}
+.tools{position:absolute;z-index:3;right:12px;top:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:58%}
+.cap{left:12px;bottom:112px;max-height:30%;overflow:auto;transition:opacity .4s;width:min(380px,calc(100% - 24px))}.ph{font:italic 500 17px Newsreader,Georgia,serif;color:#c9772f;margin-bottom:2px}#desc{font-size:13px;line-height:1.5}
+.bar{left:50%;transform:translateX(-50%);bottom:12px;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;justify-content:center;width:max-content;max-width:calc(100% - 24px);padding:7px 9px}
+.bar label,.tb label{display:flex;align-items:center;gap:4px;font:500 12px 'JetBrains Mono',monospace}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.tc{padding:12px}.tc svg{width:100%;height:auto;display:block}.tc b{font:italic 500 18px Newsreader,serif;display:block;margin-top:4px}.tc p{font-size:13px;line-height:1.45;margin:4px 0;color:#5d584f}.tc span{font:400 11px 'JetBrains Mono',monospace;color:#8a8478}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.molrow{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:center}.molrow h3{font:400 28px Newsreader,serif;margin:6px 0}.molrow p{font-size:14px;margin:0 0 8px;color:#4f4a42}
+.badge{font:500 11px 'JetBrains Mono',monospace;color:#fff;padding:2px 8px;border-radius:99px;text-shadow:0 0 2px rgba(0,0,0,.4)}
+#syn2d{width:100%;height:320px;display:block}.cap2{font:italic 400 15px Newsreader,serif;margin:6px 4px 4px;min-height:44px}
+.tb{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:10px;border-bottom:1px dashed #c9c1ae}
+.tb .l{font:400 11px 'JetBrains Mono',monospace;color:#8a8478;text-transform:uppercase;letter-spacing:.08em}
+#bsvg{display:block;width:100%;height:470px;touch-action:none;background:radial-gradient(rgba(43,43,43,.08) 1px,transparent 1.2px) 0 0/22px 22px}
+.stat{font:400 12px 'JetBrains Mono',monospace;padding:8px 12px;border-top:1px dashed #c9c1ae;color:#6f6a62}
+.tree{display:flex;flex-direction:column;gap:12px;align-items:center;padding:18px}.tree .row2{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}.tree .col,.tree .row{display:flex;flex-direction:column;gap:8px;align-items:center}.tree .row{flex-direction:row;flex-wrap:wrap;justify-content:center}
+#nsd{padding:0 18px 16px;font-size:15px}#nsd b{font:italic 500 20px Newsreader,serif;display:block}
+.chain{display:flex;justify-content:space-between;gap:6px;padding:26px 18px 18px;position:relative;font:400 11px 'JetBrains Mono',monospace;text-align:center;border-top:1px dashed #c9c1ae}
+.chain span{border:1px solid #2b2b2b;border-radius:6px;padding:5px 7px;background:#fbf8f3;z-index:1;flex:1}
+.chain::before{content:'';position:absolute;left:30px;right:30px;top:calc(50% + 4px);border-top:1.5px solid #c9c1ae}
+.chain i{position:absolute;top:calc(50% - 1px);left:30px;width:12px;height:12px;border-radius:50%;background:#e8985a;border:1.5px solid #2b2b2b;z-index:2;animation:run 4s linear infinite}
+@keyframes run{to{left:calc(100% - 42px)}}
+footer{padding:50px 0 70px;border-top:1px solid var(--line);color:var(--mut);font:400 12px 'JetBrains Mono',monospace}
+@media(max-width:900px){.step{grid-template-columns:1fr;padding:56px 0;gap:24px}.txt{position:static}.tgrid{grid-template-columns:1fr 1fr}.molrow{grid-template-columns:1fr}.chartc{width:160px}#chart{height:70px}.cap{bottom:104px}.tools{max-width:50%}.lb{font-size:11px;padding:0 4px}.hero{padding-top:60px}.chain{font-size:9px}}
+@media(max-width:520px){.tgrid{grid-template-columns:1fr}}
+
+html{scroll-padding-top:70px}
+::selection{background:#e8985a55}
+.top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);margin:0 calc(-1*clamp(18px,5vw,64px));padding:16px clamp(18px,5vw,64px);border-bottom:1px solid transparent;transition:border-color .4s,padding .4s}
+.top.sc{border-color:var(--line);padding-top:10px;padding-bottom:10px}
+.top a,.top button{transition:color .25s}.top a:hover,.top a.act{color:var(--ink)}
+#prog{position:fixed;left:0;top:0;height:2px;width:0;background:#e8985a;z-index:60;transition:width .12s linear}
+.btn{transition:background .25s,color .25s,transform .2s,box-shadow .25s}.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px -6px rgba(0,0,0,.35)}.btn:active{transform:translateY(0)}
+.cream{transition:box-shadow .4s,transform .4s}.tc:hover{transform:translateY(-3px);box-shadow:0 14px 30px -18px rgba(43,43,43,.4)}
+.rv{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}.rv.in{opacity:1;transform:none}
+.tgrid .rv:nth-child(2){transition-delay:.08s}.tgrid .rv:nth-child(3){transition-delay:.16s}.tgrid .rv:nth-child(4){transition-delay:.24s}.tgrid .rv:nth-child(5){transition-delay:.32s}.tgrid .rv:nth-child(6){transition-delay:.4s}
+#nsd{transition:opacity .3s}#nsd.fade{opacity:0}
+.nrn{transition:filter .25s}.nrn:hover{filter:drop-shadow(0 3px 6px rgba(0,0,0,.18))}.nrn.born{animation:pop .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{opacity:0}to{opacity:1}}
+.port{transition:r .2s}.port:hover{r:7.5}
+.selr{animation:spin 8s linear infinite}@keyframes spin{to{stroke-dashoffset:-60}}
+.learn{margin-top:18px;padding:14px 16px;border-left:2px solid #e8985a;background:color-mix(in srgb,#e8985a 7%,transparent);border-radius:0 10px 10px 0;font-size:14.5px}
+.learn b{font:italic 500 16px Newsreader,serif;display:block;margin-bottom:4px;color:var(--ink)}.learn p{margin:0 0 6px!important}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:0 0 80px}
+.fact{border:1px solid var(--line);border-radius:14px;padding:18px;transition:transform .35s,border-color .35s}.fact:hover{transform:translateY(-3px);border-color:#e8985a}
+.fact b{display:block;font:400 38px/1 Newsreader,serif;margin-bottom:8px}.fact span{color:var(--mut);font-size:14px}
+.glo{display:grid;grid-template-columns:repeat(2,1fr);gap:0 36px}.glo dt{font:italic 500 19px Newsreader,serif;margin-top:16px}.glo dd{margin:2px 0 0;color:var(--mut);font-size:15px}
+.quiz{display:flex;flex-direction:column;gap:16px}.q{border:1px solid var(--line);border-radius:14px;padding:16px 18px}.q p{margin:0 0 10px;font-weight:500}.q .opts{display:flex;flex-wrap:wrap;gap:8px}
+.q .btn.ok{background:#6fae8a;border-color:#6fae8a;color:#fff}.q .btn.no{background:#d9776b;border-color:#d9776b;color:#fff}.q .why{font-size:14px;color:var(--mut);max-height:0;overflow:hidden;opacity:0;transition:max-height .5s,opacity .5s,margin .5s}.q .why.show{max-height:140px;opacity:1;margin-top:10px}
+@media(max-width:900px){.facts{grid-template-columns:1fr 1fr}.glo{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+.t4{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}.t4 .tc{padding:14px;font-size:13.5px;line-height:1.5;color:#4f4a42}.t4 .tc b{font:italic 500 19px Newsreader,serif;display:flex;align-items:center;gap:8px;margin:0 0 4px;color:#2b2b2b}.t4 .tc b i{width:11px;height:11px;border-radius:50%;border:1px solid #2b2b2b}.t4 .tc p{margin:3px 0;color:#4f4a42}
+.bl{display:grid;grid-template-columns:minmax(170px,250px) 1fr;gap:16px;padding:14px;align-items:start}.bl svg{width:100%;height:auto;display:block}.bl h3{font:400 26px Newsreader,serif;margin:0 0 4px}.bl p{font-size:14px;margin:0 0 8px;color:#4f4a42}.vit{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.vit div{border:1px solid #d6cfbe;border-radius:8px;padding:5px 8px;font:400 11px 'JetBrains Mono',monospace;color:#6f6a62}.vit b{display:block;font:500 15px Inter,sans-serif;color:#2b2b2b}
+#two{width:100%;height:270px;display:block}.sh{font:italic 500 22px Newsreader,serif;margin:22px 0 8px}
+@media(max-width:900px){.t4,.bl{grid-template-columns:1fr}}
+.bl{grid-template-columns:minmax(210px,300px) 1fr!important}.or{display:grid;grid-template-columns:62px 1fr;gap:0 8px;padding:5px 0;border-bottom:1px dashed #d6cfbe;font-size:12.5px;opacity:.38;transition:opacity .5s}.or.on{opacity:1}.or.now{border-left:3px solid #e8985a;padding-left:6px}.or b{font:500 11px 'JetBrains Mono',monospace}.or span{font-weight:500}.or small{grid-column:2;color:#6f6a62;font-size:11.5px;line-height:1.4}
+#nsmap [data-p]{cursor:pointer;transition:opacity .3s,filter .3s;opacity:.5}#nsmap [data-p].nsel{opacity:1;filter:drop-shadow(0 0 3px #e8985a)}
+@media(max-width:900px){.bl{grid-template-columns:1fr!important}}
+.or{grid-template-columns:86px 1fr!important}.or details{grid-column:2;font-size:11.5px;color:#6f6a62}.or summary{cursor:pointer;color:#8a8478}.or em{font-style:normal;font-weight:600;font-size:11px;margin-left:6px;padding:1px 7px;border-radius:99px;background:#eee;color:#555}.or em.up{background:#ffe3cc;color:#a14d12}.or em.dn{background:#d8e8fa;color:#285a99}
+.syn{border-left:3px solid #e8985a;background:#fff3e6;padding:10px 12px;border-radius:0 8px 8px 0;font-size:13.5px;line-height:1.5;color:#2b2b2b;margin-bottom:10px}.syn b{font:italic 500 18px Newsreader,serif;display:block}.syn u{text-decoration:none;font-weight:600}
+.chp{display:inline-block;font:500 11px 'JetBrains Mono',monospace;padding:3px 9px;border-radius:99px;border:1px solid #c9c1ae;color:#8a8478;opacity:.45;transition:all .3s;margin:0 4px 5px 0}.chp.on{opacity:1;background:#2b2b2b;color:#fbf8f3;border-color:#2b2b2b}
+#nbLog div{font-size:13px;line-height:1.45;padding:3px 0;border-bottom:1px dashed #e0d9c8;color:#2b2b2b}
+html,body{overflow-x:clip}
+@media(max-width:700px){.top{flex-wrap:nowrap;gap:8px}.top .wm{flex:none}.top>div{display:flex;overflow-x:auto;white-space:nowrap;scrollbar-width:none;flex:1}.top>div::-webkit-scrollbar{display:none}.top a,.top button{margin-left:14px;flex:none}.hero{padding:56px 0 40px}.lead{font-size:18px}body{font-size:16px}.stage{height:min(84vh,620px)}.chartc{width:120px;padding:5px}#chart{height:52px}.tools{max-width:62%}.tools .btn{padding:4px 7px}.bar{gap:4px;padding:6px;width:calc(100% - 16px)}.bar .btn{padding:4px 7px;font-size:11px}.cap{bottom:140px;max-height:22%;font-size:12px}.fact b{font-size:30px}#bsvg{height:420px}.bl svg{max-width:290px;margin:0 auto}.t4{grid-template-columns:1fr}.facts{gap:10px}.or{grid-template-columns:78px 1fr!important}}
+@media(max-width:420px){.tgrid,.facts{grid-template-columns:1fr}.q .btn{flex:1 1 100%}}
+@media(pointer:coarse){.btn{padding:9px 12px}}
+
+/* v3 readable left panels + panes */
+.step{grid-template-columns:minmax(0,410px) minmax(0,1fr);padding:56px 0;min-height:calc(100vh - 60px);align-items:start}
+.txt{top:84px;max-height:calc(100vh - 100px);overflow:auto;scrollbar-width:thin}
+.txt h2{font-size:clamp(30px,3vw,40px);line-height:1.08;margin:0 0 12px}
+.txt p.lede{font-size:18px;line-height:1.5;color:var(--ink);margin:0 0 6px}
+.txt .kp{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:9px}
+.txt .kp li{font-size:15.5px;line-height:1.48;margin:0;padding:1px 0 1px 12px;border-left:2px solid #e8985a;color:color-mix(in srgb,var(--ink) 82%,var(--bg))}
+.txt .kp li b{color:var(--ink);font-weight:600}
+.txt p.try{font:500 13.5px/1.45 'JetBrains Mono',monospace;color:#c9772f;margin:14px 0 0}
+.tp{display:none}.tp.on{display:block;animation:fin .35s}@keyframes fin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ptabs{position:sticky;top:58px;z-index:6;display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 12px;background:var(--bg)}
+.ptab{font:500 13px 'JetBrains Mono',monospace;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:99px;padding:9px 16px;cursor:pointer;transition:background .25s,color .25s}
+.ptab.on,.ptab:hover{background:var(--ink);color:var(--bg)}
+.pane{display:none}.pane.on{display:block;animation:fin .4s}
+.pbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.pbar .hint{font:400 12px 'JetBrains Mono',monospace;color:var(--mut)}
+.dt{margin-top:12px;border:1px dashed #c9c1ae;border-radius:14px;padding:12px 16px;background:#fbf8f3;color:#2b2b2b}.dt summary{cursor:pointer;font:500 13px 'JetBrains Mono',monospace}
+footer p{margin:0 0 8px}footer .src{line-height:1.7}footer a{color:inherit;text-underline-offset:3px}
+@media(max-width:900px){.step{grid-template-columns:1fr;min-height:0}.txt{position:static;max-height:none;overflow:visible}.ptabs{top:52px}}
+
+/* v4 header + mobile bento (21st.dev-style patterns in plain CSS) */
+.top{flex-wrap:nowrap;gap:16px;text-transform:none;letter-spacing:0;padding-top:12px;padding-bottom:12px}
+.top .wm{display:flex;align-items:center;gap:10px;font:500 24px Newsreader,Georgia,serif;margin:0;color:var(--ink)}
+.top .wm .lg{width:28px;height:28px;border-radius:9px;background:#e8985a;display:grid;place-items:center;font-size:14px;color:#2b2b2b;border:1.5px solid var(--ink)}
+.top .links{display:flex;gap:2px;padding:4px;border:1px solid var(--line);border-radius:99px;background:color-mix(in srgb,var(--bg) 70%,transparent);white-space:nowrap}
+.top .links a{margin:0;padding:8px 14px;border-radius:99px;font:500 12px 'JetBrains Mono',monospace;letter-spacing:.03em;text-transform:lowercase;color:var(--mut);transition:background .25s,color .25s}
+.top .links a:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.top .links a.act{color:var(--bg);background:var(--ink)}
+.top .acts{display:flex;gap:8px;align-items:center;flex:none;overflow:visible}
+.top .pill{margin:0;border:1px solid var(--ink);border-radius:99px;padding:9px 15px;font:500 12px 'JetBrains Mono',monospace;color:var(--ink);transition:background .25s,color .25s}
+.top .pill:hover{background:var(--ink);color:var(--bg)}
+.top .burger,.top .mfull{display:none}
+.burger{width:42px;height:42px;border:1px solid var(--ink);border-radius:12px;background:transparent;cursor:pointer;position:relative;padding:0}
+.burger span{position:absolute;left:11px;right:11px;height:2px;border-radius:2px;background:var(--ink);transition:transform .3s,opacity .2s,top .3s}
+.burger span:nth-child(1){top:14px}.burger span:nth-child(2){top:20px}.burger span:nth-child(3){top:26px}
+.top.open .burger span:nth-child(1){top:20px;transform:rotate(45deg)}.top.open .burger span:nth-child(2){opacity:0}.top.open .burger span:nth-child(3){top:20px;transform:rotate(-45deg)}
+@media(max-width:1000px){
+ .top .links{display:none;position:absolute;left:12px;right:12px;top:calc(100% + 6px);padding:12px;border-radius:22px;grid-template-columns:1fr 1fr;gap:8px;background:var(--bg);box-shadow:0 28px 50px -22px rgba(0,0,0,.4);max-height:calc(100dvh - 84px);overflow:auto;white-space:normal}
+ .top.open .links{display:grid;animation:fin .25s}
+ .top .links a{display:flex;align-items:center;justify-content:space-between;padding:16px 14px;border-radius:14px;border:1px solid var(--line);font-size:13px}
+ .top .links a::after{content:'→';opacity:.5}
+ .top .links a:first-child,.top .links a:nth-last-child(2){grid-column:span 2}
+ .top .mfull{display:block;grid-column:span 2;margin:0;padding:14px;border-radius:14px;border:1px dashed var(--mut);background:transparent;color:var(--ink);font:500 13px 'JetBrains Mono',monospace;cursor:pointer}
+ .top .burger{display:block}.top .pill{display:none}.top>.acts{overflow:visible;flex:none}
+}
+@media(max-width:700px){
+ .hero{padding:44px 0 28px}h1{font-size:clamp(38px,11vw,56px)}
+ .facts{grid-template-columns:1fr 1fr;gap:10px;padding-bottom:36px}.facts .fact:first-child{grid-column:span 2}.fact{padding:14px}.fact b{font-size:30px}.fact span{font-size:13px}
+ .step{padding:34px 0;gap:16px}
+ .txt{border:1px solid var(--line);border-radius:20px;padding:18px;background:color-mix(in srgb,var(--ink) 3%,var(--bg))}
+ .txt h2{font-size:28px}.txt p.lede{font-size:16.5px}
+ .txt .kp{grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+ .txt .kp li{border:1px solid var(--line);border-radius:12px;padding:10px 11px;font-size:13.5px;line-height:1.42;background:var(--bg)}
+ .txt .kp li:first-child{grid-column:span 2}
+ .tgrid{grid-template-columns:1fr 1fr;gap:10px}.tgrid .tc:first-child{grid-column:span 2}.tc{padding:10px}.tc b{font-size:16px}.tc p{font-size:12px}
+ .glo{grid-template-columns:1fr 1fr;gap:8px}.glo>div{border:1px solid var(--line);border-radius:14px;padding:10px 12px}.glo dt{margin-top:0;font-size:17px}.glo dd{font-size:13px;line-height:1.4}
+ .ptabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px}.ptabs::-webkit-scrollbar{display:none}.ptab{flex:none;padding:8px 12px;font-size:12px}
+ .t4{grid-template-columns:1fr 1fr}.t4 .tc{padding:10px;font-size:12px}
+ .q .btn{flex:1 1 100%}
+}
+@media(max-width:380px){.txt .kp,.tgrid,.glo{grid-template-columns:1fr}.txt .kp li:first-child,.tgrid .tc:first-child{grid-column:auto}}
+</style></head><body><div id="prog"></div>
+<div class="wrap">
+<nav class="top" id="topnav" aria-label="Main"><a class="wm" href="#top"><span class="lg">◉</span>neurolab</a><div class="links" id="navlinks"><a href="#s1">neuron</a><a href="#s2">types</a><a href="#s3">synapses</a><a href="#s4">chemistry</a><a href="#s5">build</a><a href="#s6">system</a><a href="#s7">glossary</a><a href="#s8">quiz</a><button class="mfull" id="bFull3">⤢ Full screen 3D neuron</button></div><div class="acts"><button class="pill" id="bFull2">⤢ Full screen</button><button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><span></span><span></span><span></span></button></div></nav>
+<header class="hero" id="top"><p class="eb">An explainer</p><h1>How Neurons Talk to Each Other</h1><p class="lead">One cell, one signal, every step shown. Rotate it, study the molecules, then wire up your own network — scroll to begin.</p></header><div class="facts"><div class="fact rv"><b>86 bn</b><span>neurons in an adult human brain, plus about as many non-neuronal cells (Azevedo et al., 2009).</span></div><div class="fact rv"><b>120 m/s</b><span>top conduction speed in the largest myelinated axons (about 430 km/h).</span></div><div class="fact rv"><b>~100 tn</b><span>synapses is a commonly cited estimate. One neuron can receive thousands of inputs.</span></div><div class="fact rv"><b>20 W</b><span>the power your brain runs on, about the same as a dim light bulb.</span></div></div>
+
+<section class="step" id="s1"><div class="txt"><p class="eb">Step 1</p><h2>Meet the neuron</h2><p class="lede">A neuron is a cell built to carry signals. Dendrites receive, the soma adds up the inputs, and the axon sends the output.</p><ul class="kp"><li><b>Resting potential</b> about −70 mV, held by the Na⁺/K⁺ pump (3 Na⁺ out, 2 K⁺ in).</li><li><b>Threshold</b> about −55 mV. Reach it and the spike fires fully: all-or-none.</li><li><b>Myelin</b> insulates the axon. The spike jumps between gaps (nodes of Ranvier), up to about 120 m/s.</li></ul><p class="try">▶ Press Fire signal, then try the Full / Soma / Axon / Synapse views.</p></div><div class="vis"><div class="cream stage" id="stage"><canvas id="c"></canvas><svg id="lines"></svg><div id="labels"></div>
+<div class="float chartc"><canvas id="chart"></canvas></div>
+<div class="tools"><button class="btn" id="bFull">⤢ Full screen</button><button class="btn" id="bMode">Drag: Rotate</button><button class="btn" id="bIn">＋</button><button class="btn" id="bOut">－</button><button class="btn" id="bReset">↺</button></div>
+<div class="float cap"><div class="ph" id="phase"></div><div id="desc"></div></div>
+<div class="float bar"><button class="btn p" id="bFire">⚡ Fire signal</button><button class="btn" id="bPause">⏸ Pause</button><label>speed <input type="range" id="spd" min=".3" max="2" step=".1" value="1"></label><button class="btn" data-v="full">Full</button><button class="btn" data-v="soma">Soma</button><button class="btn" data-v="axon">Axon</button><button class="btn" data-v="syn">Synapse</button><label><input type="checkbox" id="cLab" checked>labels</label><label><input type="checkbox" id="cAuto" checked>auto</label></div></div></div></section>
+
+<section class="step" id="s2"><div class="txt"><p class="eb">Step 2</p><h2>Not all neurons look alike</h2><p class="lede">Neurons are grouped by function and by shape. In the spinal cord there are three functional types; in the brain there are many more, and scientists are still agreeing how to classify them.</p><ul class="kp"><li><b>Sensory (afferent)</b> carry signals toward the CNS. Most are pseudounipolar.</li><li><b>Motor (efferent)</b> carry commands from the CNS to muscles and glands. Multipolar.</li><li><b>Interneurons</b> link sensory and motor neurons and form circuits inside the CNS.</li><li><b>Glia</b> astrocytes, oligodendrocytes and microglia support and insulate neurons.</li></ul><p class="try">▶ Shape follows job: a long axon reaches a muscle, a big dendrite tree gathers inputs.</p></div><div class="vis"><div class="tgrid" id="tgrid"></div></div></section>
+
+<section class="step" id="s3"><div class="txt"><p class="eb">Step 3</p><h2>Types of synapse</h2><p class="lede">A synapse is the junction where a neuron passes its signal to another cell. Most are chemical; some are electrical.</p><ul class="kp"><li><b>Chemical</b> a transmitter crosses a cleft about 20–40 nm wide, adding a delay of roughly 0.5–5 ms.</li><li><b>Excitatory / inhibitory</b> the balance of both decides whether the next cell fires.</li><li><b>Electrical</b> gap junctions pass ions directly: very fast and synchronised (e.g. heart muscle).</li><li><b>Plasticity</b> chemical synapses strengthen or weaken with use: the basis of learning and memory.</li></ul><p class="try">▶ Where the axon lands matters too: dendrite, cell body or another axon.</p></div><div class="vis"><div class="tgrid" id="sgrid"></div></div></section>
+
+<section class="step" id="s4"><div class="txt"><p class="eb">Step 4</p><h2>The chemistry of the message</h2><p class="lede">Neurotransmitters are small molecules. Each fits matching receptors, like a key in a lock, and is then cleared away.</p><ul class="kp"><li><b>Release</b> a spike opens Ca²⁺ channels; vesicles fuse and spill transmitter.</li><li><b>Binding</b> molecules cross the cleft and bind receptors on the next cell.</li><li><b>Cleanup</b> reuptake pumps (e.g. SERT, DAT) or enzymes (acetylcholinesterase).</li><li><b>In medicine</b> SSRIs block serotonin reuptake, caffeine blocks adenosine receptors, Parkinson’s involves loss of dopamine neurons.</li></ul><p class="try">▶ Pick a molecule below to see its structure and the cycle.</p></div><div class="vis"><div class="chips" id="ntbtn" style="margin:0 0 14px"></div><div class="cream pad"><div class="molrow"><div id="mol"></div><div id="ntinfo"></div></div></div>
+<div class="cream pad" style="margin-top:14px"><canvas id="syn2d"></canvas><p class="cap2" id="syncap"></p><button class="btn" id="bReplay">↻ Replay</button></div></div></section>
+
+<section class="step" id="s5"><div class="txt"><p class="eb">Step 5</p><div class="tp on" data-tp="build"><h2>Wire your own network</h2><p class="lede">A neuron adds up its inputs. If the total reaches threshold, it fires (summation).</p><ul class="kp"><li><b>Add</b> neurons with the buttons (sensory, interneuron, motor, pyramidal).</li><li><b>Connect</b> drag from a neuron’s ○ port to another neuron.</li><li><b>Fire</b> press Fire or double-click a neuron. The view switches to the body.</li><li><b>Edit</b> click a line to change its transmitter or strength.</li></ul><p class="try">▶ Start with Example circuits → Reflex arc, then press Fire.</p></div><div class="tp" data-tp="body"><h2>How your body responds</h2><p class="lede">Your circuit is now driving the body. Watch which organ reacts, and when.</p><ul class="kp"><li><b>Motor neuron</b> releases acetylcholine at the muscle, so the arm contracts.</li><li><b>GABA</b> is the brake: the muscle stays relaxed and pain signals are turned down.</li><li><b>Dopamine / serotonin</b> modulate: they tune mood, movement and calm rather than firing cells.</li><li><b>Spinal cord, cortex</b> glow when interneurons or pyramidal cells fire.</li></ul><p class="try">▶ Go back, set the synapse to GABA, fire again and compare.</p></div><div class="tp" data-tp="chem"><h2>What does a chemical do?</h2><p class="lede">Choose a chemical and a level, then release it to see how the whole body changes.</p><ul class="kp"><li><b>Low / Normal / High</b> compare each organ: normal → with this chemical.</li><li><b>Why it happens</b> open “why does this happen?” under each row for the receptor science.</li><li><b>Examples</b> Parkinson’s (low dopamine), serotonin syndrome (excess), opioids (mimic endorphins).</li></ul><p class="try">▶ Simplified model of a typical adult. Not medical advice.</p></div></div><div class="vis"><div class="ptabs" id="ptabs"><button class="ptab on" data-pane="build">① Build circuit</button><button class="ptab" data-pane="body">② Body response</button><button class="ptab" data-pane="chem">③ Chemical lab</button></div><div class="pane on" id="pane-build"><div class="cream"><div class="tb"><span class="l">add</span><button class="btn" data-add="sensory">sensory</button><button class="btn" data-add="inter">interneuron</button><button class="btn" data-add="motor">motor</button><button class="btn" data-add="pyr">pyramidal</button><span class="l">synapse</span><select class="btn" id="bSyn"></select><label>strength <input type="range" id="bW" min=".2" max="1.2" step=".05" value=".55"></label></div>
+<div class="tb"><button class="btn p" id="bFireN">⚡ Fire → see body</button><button class="btn" id="bDel">✕ Delete selected</button><button class="btn" id="bClr">Clear</button><select class="btn" id="bPre"><option value="">Example circuits…</option><option value="reflex">Reflex arc</option><option value="conv">Convergence</option><option value="loop">Feedback loop</option><option value="brake">Inhibitory brake</option></select><label><input type="checkbox" id="bSpon">spontaneous input</label></div>
+<svg id="bsvg"></svg><div class="stat" id="bstat"></div></div><details class="dt"><summary>Neuron types used in this builder</summary><div style="margin-top:10px"><div class="t4">
+<div class="cream tc"><b><i style="background:#6b9ed8"></i>Sensory neuron</b><p><b style="display:inline;font-size:14px">Job:</b> turns touch, heat, light or pain into an electrical signal and carries it <i>toward</i> the spinal cord and brain (afferent).</p><p><b style="display:inline;font-size:14px">Shape:</b> one long receiving fibre. <b style="display:inline;font-size:14px">Example:</b> a fingertip feeling a hot cup.</p></div>
+<div class="cream tc"><b><i style="background:#8cc29a"></i>Interneuron</b><p><b style="display:inline;font-size:14px">Job:</b> the “middle-man” inside the brain and spinal cord. It processes, filters and routes signals; many are inhibitory (GABA). About 99% of neurons.</p><p><b style="display:inline;font-size:14px">Shape:</b> small and star-shaped. Example: the spinal cell in a pain reflex.</p></div>
+<div class="cream tc"><b><i style="background:#e8985a"></i>Motor neuron</b><p><b style="display:inline;font-size:14px">Job:</b> carries commands <i>away</i> from the spinal cord to muscles and glands (efferent). At the muscle it releases acetylcholine, which makes it contract.</p><p><b style="display:inline;font-size:14px">Shape:</b> large soma, long myelinated axon (up to ~1 m).</p></div>
+<div class="cream tc"><b><i style="background:#b07fc8"></i>Pyramidal neuron</b><p><b style="display:inline;font-size:14px">Job:</b> the main excitatory (glutamate) cell of the cortex. It handles thinking, memory and planning voluntary movement, and gathers thousands of inputs.</p><p><b style="display:inline;font-size:14px">Shape:</b> triangular body with a tall apical dendrite.</p></div></div></div></details></div><div class="pane" id="pane-body"><div class="pbar"><button class="btn" data-pane="build">← Back to circuit</button><button class="btn p" id="bFireAgain">⚡ Fire again</button><span class="hint">The circuit keeps running while you watch the body.</span></div><div class="cream"><div class="bl"><svg id="nbs" viewBox="20 0 220 300"></svg><div><div class="syn" id="nbSyn"></div><p style="font-size:13px;margin:0 0 8px;color:#4f4a42">Try it: choose <b>Example circuits → Reflex arc</b>, press <b>⚡ Fire</b>, and watch the arm pull away. Then set the synapse to <b>GABA</b> and fire again: the movement is blocked. Try <b>dopamine</b>, <b>serotonin</b> or <b>acetylcholine</b> on a connection and compare.</p><div id="nbChips"></div><div id="nbLog"></div></div></div></div></div><div class="pane" id="pane-chem"><div class="cream"><div class="tb"><span class="l">1 · chemical</span><span id="bchips" style="display:contents"></span></div><div class="tb"><span class="l">2 · level</span><button class="btn" data-l="0">Low</button><button class="btn on" data-l="1">Normal</button><button class="btn" data-l="2">High</button><span class="l">3 · then</span><button class="btn p" id="bRel">⚡ Release chemical</button><button class="btn" id="bRst">↺ Reset</button></div><div class="bl"><svg id="bsv" viewBox="0 0 290 520"></svg><div><h3 id="bN"></h3><p id="bWh" style="font-size:15px;color:#2b2b2b"></p><p id="bPath" style="font:400 11px 'JetBrains Mono',monospace;color:#8a8478"></p><p id="bPh" style="font:italic 500 16px Newsreader,serif;color:#c9772f;min-height:50px"></p><p style="font-size:12px;color:#8a8478;margin:0 0 4px">Each row shows: normal → with this chemical.</p><div id="bRows"></div><p id="bSum" style="display:none;margin-top:10px;padding:10px 12px;background:#fff3e6;border-left:3px solid #e8985a;border-radius:0 8px 8px 0;font-size:14.5px"></p><p style="font-size:11.5px;color:#8a8478">Simplified model of a typical adult, based on standard physiology and pharmacology. Real responses depend on dose, receptor distribution, other drugs and the individual. Not medical advice.</p></div></div></div></div></div></section>
+
+<section class="step" id="s6"><div class="txt"><p class="eb">Step 6</p><h2>The nervous system</h2><p class="lede">The central nervous system (brain and spinal cord) processes information. The peripheral nervous system links it to the body.</p><ul class="kp"><li><b>Somatic</b> sensory input and voluntary muscles (acetylcholine at muscle).</li><li><b>Autonomic</b> sympathetic = fight or flight (norepinephrine); parasympathetic = rest and digest (acetylcholine).</li><li><b>Enteric</b> hundreds of millions of neurons in the gut wall, largely self-running.</li><li><b>Reflexes</b> the spinal cord answers directly; the brain is informed afterwards.</li></ul><p class="try">▶ Tap any part of the body diagram.</p></div><div class="vis"><div class="cream" style="padding:12px"><svg id="nsmap" viewBox="0 0 340 520" style="width:100%;max-width:400px;margin:auto;display:block"></svg><p class="cap2" style="text-align:center">Tap any part of the diagram. The spinal cord ends around L1–L2; below it, nerve roots hang as the cauda equina.</p></div><div class="cream" style="margin-top:14px"><div class="tree"><button class="btn on" data-ns="ns">Nervous system</button><div class="row2"><div class="col"><button class="btn" data-ns="cns">CNS</button><div class="row"><button class="btn" data-ns="brain">Brain</button><button class="btn" data-ns="cord">Spinal cord</button></div></div><div class="col"><button class="btn" data-ns="pns">PNS</button><div class="row"><button class="btn" data-ns="som">Somatic</button><button class="btn" data-ns="aut">Autonomic</button><button class="btn" data-ns="ent">Enteric</button></div><div class="row"><button class="btn" data-ns="sym">Sympathetic</button><button class="btn" data-ns="par">Parasympathetic</button></div></div></div></div><div id="nsd"></div>
+<div class="chain"><span>hot pan</span><span>sensory neuron</span><span>spinal interneuron</span><span>motor neuron</span><span>muscle pulls away</span><i></i></div></div></div></section>
+<section class="step" id="s7"><div class="txt rv"><p class="eb">Step 7</p><h2>Glossary</h2><p class="lede">The key words from this page in one place.</p></div><div class="vis rv"><dl class="glo"><div><dt>Action potential</dt><dd>A brief electrical spike that travels down the axon when a neuron fires.</dd></div><div><dt>Axon</dt><dd>The long output fibre that carries the signal away from the cell body.</dd></div><div><dt>Dendrite</dt><dd>Branching input fibres that receive signals from other neurons.</dd></div><div><dt>Soma</dt><dd>The cell body; contains the nucleus and sums up the inputs.</dd></div><div><dt>Myelin</dt><dd>A fatty insulating sheath around axons that speeds up signals.</dd></div><div><dt>Synapse</dt><dd>The junction where one neuron passes its signal to the next.</dd></div><div><dt>Neurotransmitter</dt><dd>A chemical messenger released at a synapse, e.g. glutamate, GABA, dopamine.</dd></div><div><dt>Receptor</dt><dd>A protein on the receiving cell that fits one neurotransmitter, like a lock.</dd></div><div><dt>Threshold</dt><dd>The voltage (≈ −55 mV) a neuron must reach to fire.</dd></div><div><dt>Plasticity</dt><dd>The ability of synapses to strengthen or weaken with use — how we learn.</dd></div></dl></div></section><section class="step" id="s8"><div class="txt rv"><p class="eb">Step 8</p><h2>Test yourself</h2><p class="lede">Four quick questions. Tap an answer to see why.</p><p id="qscore"></p></div><div class="vis rv"><div class="quiz"><div class="q" data-a="1"><p>1. Which part of a neuron receives signals?</p><div class="opts"><button class="btn" data-o="0">Axon</button><button class="btn" data-o="1">Dendrite</button><button class="btn" data-o="2">Myelin</button></div><div class="why">Dendrites collect input; the axon sends output.</div></div><div class="q" data-a="0"><p>2. What does myelin do?</p><div class="opts"><button class="btn" data-o="0">Speeds up signals</button><button class="btn" data-o="1">Makes neurotransmitters</button><button class="btn" data-o="2">Stores memories</button></div><div class="why">Myelin insulates the axon so the spike jumps between gaps, travelling much faster.</div></div><div class="q" data-a="2"><p>3. Which neurotransmitter is mostly inhibitory?</p><div class="opts"><button class="btn" data-o="0">Glutamate</button><button class="btn" data-o="1">Acetylcholine</button><button class="btn" data-o="2">GABA</button></div><div class="why">GABA calms neurons down; glutamate is the main excitatory one.</div></div><div class="q" data-a="1"><p>4. A reflex is controlled mainly by…</p><div class="opts"><button class="btn" data-o="0">the brain</button><button class="btn" data-o="1">the spinal cord</button><button class="btn" data-o="2">the heart</button></div><div class="why">The spinal cord answers directly for speed; the brain is informed afterwards.</div></div></div></div></section>
+<footer><p>neurolab · drag to rotate, scroll to zoom, right-drag or Move mode to pan</p><p class="src">Sources: <a href="https://qbi.uq.edu.au/node/6235">Queensland Brain Institute – Types of neurons</a> · <a href="https://www.brainfacts.org/in-the-lab/meet-the-researcher/2018/how-many-neurons-are-in-the-brain-120418">BrainFacts/SfN – How many neurons are in the brain?</a> · <a href="https://onlinelibrary.wiley.com/doi/10.1002/cne.21974">Azevedo et al. 2009, J Comp Neurol</a> · <a href="https://www.ncbi.nlm.nih.gov/books/NBK11097/">Purves et al., Neuroscience, 2nd ed. – The Enteric Nervous System</a> · <a href="https://www.hopkinsmedicine.org/news/articles/2021/11/johns-hopkins-researcher-pioneers-artificial-intelligence-to-identify-and-count-nerve-cells-in-the-gut">Johns Hopkins Medicine – enteric neuron counts</a>. Educational simplification; not medical advice.</p></footer></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>if(!window.THREE)document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
+<script>
+const V3=THREE.Vector3;
+let seed=7;const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const stage=document.getElementById('stage'),cv=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,1,.1,300);
+scene.add(new THREE.HemisphereLight(0xffffff,0xcdbbff,.85));
+const d1=new THREE.DirectionalLight(0xffffff,.9);d1.position.set(6,10,9);scene.add(d1);
+const d2=new THREE.DirectionalLight(0xff7ad9,.6);d2.position.set(-8,-5,-7);scene.add(d2);
+const pl=new THREE.PointLight(0xffe066,0,7);scene.add(pl);
+const GM=new THREE.DataTexture(new Uint8Array([150,150,150,255,205,205,205,255,255,255,255,255]),3,1,THREE.RGBAFormat);GM.minFilter=GM.magFilter=THREE.NearestFilter;GM.needsUpdate=true;
+const M=(c,o={})=>new THREE.MeshPhongMaterial(Object.assign({color:c,shininess:35,specular:0x333333},o));
+const olc={};const OL=t=>olc[t]||(olc[t]=new THREE.ShaderMaterial({uniforms:{t:{value:t}},vertexShader:'uniform float t;void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position+normal*t,1.);}',fragmentShader:'void main(){gl_FragColor=vec4(.1,.1,.22,1.);}',side:THREE.BackSide}));
+function gtex(){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.3,'rgba(255,255,255,.35)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)}
+const GT=gtex();
+const spr=(col,s)=>{const m=new THREE.Sprite(new THREE.SpriteMaterial({map:GT,color:col,transparent:true,opacity:.8,depthWrite:false}));m.scale.set(s,s,1);return m};
+const add=m=>{scene.add(m);return m};
+const tube=(pts,r,mat,seg=24)=>{const m=add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),seg,r,10,false),mat));m.userData.t=.025;return m};
+
+/* ---- soma, nucleus ---- */
+const SC=new V3(-8,0,0);
+const sg=new THREE.SphereGeometry(1.7,64,48),sp=sg.attributes.position;
+for(let i=0;i<sp.count;i++){const x=sp.getX(i),y=sp.getY(i),z=sp.getZ(i),n=1+.07*Math.sin(x*2.3+1)*Math.sin(y*2.1)+.05*Math.sin(z*3.1+x*1.7);sp.setXYZ(i,x*n,y*n,z*n)}
+sg.computeVertexNormals();
+const soma=new THREE.Mesh(sg,M(0xf2b8a2,{transparent:true,opacity:.6}));soma.userData.no=1;soma.position.copy(SC);add(soma);
+const nuc=new THREE.Mesh(new THREE.SphereGeometry(.85,32,24),M(0xb9a7d8));nuc.position.copy(SC);add(nuc);
+const nl=new THREE.Mesh(new THREE.SphereGeometry(.3,16,12),M(0xf0c85a));nl.position.set(-8.2,.2,.3);add(nl);
+const hil=new THREE.Mesh(new THREE.ConeGeometry(.6,1.5,28).rotateZ(-Math.PI/2),M(0xe8985a));hil.position.set(-6.1,0,0);add(hil);
+
+/* ---- dendrites ---- */
+const dmat=M(0x9fb4d6),tips=[];
+function dend(o,dir,len,rad,depth){const pts=[o.clone()];let cur=o.clone(),d=dir.clone();
+ for(let k=0;k<3;k++){d.add(new V3(rnd()-.5,rnd()-.5,rnd()-.5).multiplyScalar(.55)).normalize();cur=cur.clone().addScaledVector(d,len/3);pts.push(cur)}
+ tube(pts,rad,dmat,20);const j=new THREE.Mesh(new THREE.SphereGeometry(rad*1.15,10,8),dmat);j.position.copy(cur);add(j);
+ if(depth>0){const nb=2+(rnd()>.6?1:0);for(let b=0;b<nb;b++)dend(cur,d.clone().add(new V3(rnd()-.5,rnd()-.5,rnd()-.5).multiplyScalar(1.3)).normalize(),len*.78,rad*.7,depth-1)}
+ else{const t=new THREE.Mesh(new THREE.SphereGeometry(rad*1.7,10,8),M(0xc7d4ea));t.position.copy(cur);add(t);tips.push(cur.clone())}}
+[[-1,.6,.2],[-1,-.5,.4],[-.6,1,-.3],[-.5,-1,-.2],[-.7,.1,1],[-.7,-.2,-1],[-.2,.9,.7]].forEach(a=>{const d=new V3(...a).normalize();dend(SC.clone().addScaledVector(d,1.55),d,2.4,.14,2)});
+
+/* ---- axon, myelin ---- */
+const curve=new THREE.CatmullRomCurve3([new V3(-5.5,0,0),new V3(-2.5,.5,.3),new V3(1,-.3,-.2),new V3(4.5,.35,.25),new V3(8.3,0,0)]);
+const TS=320,RS=12,axG=new THREE.TubeGeometry(curve,TS,.17,RS,false);
+const axCol=new Float32Array(axG.attributes.position.count*3);axG.setAttribute('color',new THREE.BufferAttribute(axCol,3));
+add(new THREE.Mesh(axG,M(0xffffff,{vertexColors:true}))).userData.t=.022;
+const base=new THREE.Color(0xe8985a),myM=M(0xb8d8c4);
+let nodePos,myMid;
+for(let i=0;i<7;i++){const w=.88/7,t0=.05+i*w+.007,t1=.05+(i+1)*w-.007,A=curve.getPoint(t0),B=curve.getPoint(t1),len=A.distanceTo(B),pts=[];
+ for(let k=0;k<=24;k++){const u=k/24;pts.push(new THREE.Vector2(.17+.3*Math.pow(Math.sin(Math.PI*u),.4),(u-.5)*len))}
+ const m=new THREE.Mesh(new THREE.LatheGeometry(pts,28),myM);m.position.copy(A).add(B).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new V3(0,1,0),B.clone().sub(A).normalize());add(m);
+ if(i==2)myMid=m.position.clone().add(new V3(0,.45,0));if(i==3)nodePos=curve.getPoint(t0-.007)}
+function paint(p,on){for(let i=0;i<=TS;i++){const t=i/TS;let g=0,w=0;if(on){g=Math.exp(-(((t-p)/.03)**2));const d=p-t;if(d>0&&d<.14)w=.45*(1-d/.14)}
+ const r=base.r*(1-w*.6)+g*(1-base.r)*.9,gg=base.g*(1-w*.3)+g*(1-base.g)*.9,b=base.b+w*.7+g*.5;
+ for(let j=0;j<=RS;j++){const k=(i*(RS+1)+j)*3;axCol[k]=r;axCol[k+1]=gg;axCol[k+2]=b}}
+ axG.attributes.color.needsUpdate=true}
+const head=add(spr(0xffd84a,2.6));
+
+/* ---- terminals, synapse ---- */
+const E=curve.getPoint(1),BC=new V3(9.4,0,0),gm=M(0x9fcfa8,{emissive:0x2bd45a,transparent:true,opacity:.6}),gt=M(0x9fcfa8);
+const bulb=new THREE.Mesh(new THREE.SphereGeometry(.95,40,32),gm);bulb.userData.no=1;bulb.position.copy(BC);add(bulb);
+[[9.1,1.45,.8],[9.0,-1.35,-.7]].forEach(c=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.5,24,18),gm);m.userData.no=1;m.position.set(...c);add(m);tube([E,E.clone().lerp(new V3(...c),.5),new V3(...c)],.1,gt,12)});
+tube([E,new V3(8.8,0,0),BC],.16,gt,10);
+const PC=new V3(13.1,0,0),pa=1.95,pb=pa*1.5,pcz=pa*1.3,pm=M(0x9fb4d6,{emissive:0x2255ff,emissiveIntensity:0});
+const post=new THREE.Mesh(new THREE.SphereGeometry(pa,48,36),pm);post.scale.set(1,1.5,1.3);post.position.copy(PC);add(post);
+tube([new V3(14.6,0,0),new V3(16,.8,.3),new V3(17.5,1,.5)],.45,pm,12);
+const OFF=[[0,0],[.7,.4],[-.7,.4],[.7,-.5],[-.7,-.5],[0,1],[0,-1]];
+const recs=OFF.map(([y,z])=>{const x=PC.x-pa*Math.sqrt(1-(y/pb)**2-(z/pcz)**2);const mat=M(0xe8985a,{emissive:0x00ff88,emissiveIntensity:0});
+ const m=new THREE.Mesh(new THREE.ConeGeometry(.2,.45,14).rotateZ(Math.PI/2),mat);m.position.set(x-.2,y,z);add(m);return{pos:new V3(x-.3,y,z),mat,glow:0}});
+const sites=OFF.slice(0,6).map(([y,z])=>{y*=.55;z*=.55;return new V3(BC.x+Math.sqrt(.9025-y*y-z*z),y,z)});
+const vs=[];for(let i=0;i<10;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.14,14,10),M(0xf0c85a));
+ const home=i<6?new V3(BC.x-.25+rnd()*.15,sites[i].y*.8,sites[i].z*.8):new V3(BC.x-.5-rnd()*.25,(rnd()-.5)*.8,(rnd()-.5)*.8);m.position.copy(home);add(m);vs.push({m,home})}
+const nts=[];for(let i=0;i<30;i++){const g=new THREE.Group(),s=new THREE.Mesh(new THREE.SphereGeometry(.1,10,8),new THREE.MeshBasicMaterial({color:0xffa400}));g.add(s,spr(0xffb100,.5));g.visible=false;add(g);nts.push({g,on:false})}
+const ions=[];for(let i=0;i<48;i++){const k=i<24;const m=new THREE.Mesh(new THREE.SphereGeometry(.08,10,8),new THREE.MeshBasicMaterial({color:k?0x4aa8ff:0x5dff7a}));m.visible=false;add(m);ions.push({m,na:k,a:i*2.399,o:Math.sin(i)})}
+
+const olList=[];scene.traverse(o=>{if(o.isMesh&&!o.userData.no&&o.material.type==='MeshToonMaterial'){o.geometry.computeBoundingSphere();const r=o.geometry.boundingSphere.radius;if(r>.12)olList.push([o,o.userData.t||Math.min(.05,Math.max(.025,r*.03))])}});
+olList.forEach(([o,t])=>o.add(new THREE.Mesh(o.geometry,OL(t))));
+/* ---- labels ---- */
+const LB=[['Dendrites',tips[0],'#b98bff',-60,-50],['Cell body (soma)',new V3(-8,1.75,0),'#ff7ab8',-30,-70],['Nucleus',SC,'#9d8cff',-60,70],['Axon hillock',new V3(-6.1,.5,0),'#ffb347',-20,75],['Axon',curve.getPoint(.03),'#ffb347',-20,-60],['Myelin sheath',myMid,'#3fe8d0',0,-70],['Node of Ranvier',nodePos,'#ffd24a',20,75],['Axon terminals',new V3(9.2,1.0,0),'#7dff8a',20,-75],['Synaptic vesicles',new V3(9.1,-.3,.3),'#ffd24a',-50,95],['Synaptic cleft',new V3(10.75,0,0),'#ffffff',0,-115],['Neurotransmitters',new V3(10.7,-.8,0),'#ffe14d',10,110],['Receptors',new V3(11.15,.7,.4),'#ff8a65',70,-85],['Postsynaptic neuron',new V3(13.4,1.9,0),'#6bb6ff',50,-60]];
+const svg=document.getElementById('lines'),lbd=document.getElementById('labels');
+LB.forEach(l=>{l.el=document.createElement('div');l.el.className='lb';l.el.style.setProperty('--c',l[2]);l.el.textContent=l[0];lbd.appendChild(l.el);
+ l.ln=document.createElementNS('http://www.w3.org/2000/svg','line');svg.appendChild(l.ln)});
+let showLab=true;
+
+/* ---- camera ---- */
+const cam={t:new V3(1.2,0,0),th:.25,ph:1.3,r:24},goal={t:new V3(1.2,0,0),th:.25,ph:1.3,r:24};
+let W=1,H=1;
+const fitR=()=>Math.max(14,19/(.414*(W/H)))*1.1;
+const views={full:()=>({t:new V3(1.2,0,0),r:fitR()}),soma:()=>({t:SC.clone(),r:9}),axon:()=>({t:new V3(1,0,0),r:12}),syn:()=>({t:new V3(11,0,0),r:9})};
+function go(n){const v=views[n]();goal.t.copy(v.t);goal.r=v.r}
+function resize(){W=Math.max(1,stage.clientWidth);H=Math.max(1,stage.clientHeight);renderer.setSize(W,H,false);camera.aspect=W/H;camera.updateProjectionMatrix()}
+addEventListener('resize',resize);if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);resize();cam.r=goal.r=fitR();
+const ptr=new Map();let pd=0,mode='rot';
+const clampR=r=>Math.min(60,Math.max(4,r));
+function pan(dx,dy){const f=2*cam.r*Math.tan(camera.fov*Math.PI/360)/H,el=camera.matrixWorld.elements;goal.t.x+=(-dx*el[0]+dy*el[4])*f;goal.t.y+=(-dx*el[1]+dy*el[5])*f;goal.t.z+=(-dx*el[2]+dy*el[6])*f}
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,e);pd=0});
+cv.addEventListener('pointerup',e=>ptr.delete(e.pointerId));cv.addEventListener('pointercancel',e=>ptr.delete(e.pointerId));
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('pointermove',e=>{const o=ptr.get(e.pointerId);if(!o)return;const dx=e.clientX-o.clientX,dy=e.clientY-o.clientY;
+ if(ptr.size==1){if(mode=='pan'||e.shiftKey||(e.buttons&2))pan(dx,dy);else{goal.th-=dx*.006;goal.ph=Math.min(2.9,Math.max(.2,goal.ph-dy*.005))}}
+ else if(ptr.size==2){const [a,b]=[...ptr.values()],d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);if(pd)goal.r=clampR(goal.r*pd/d);pd=d;pan(dx/2,dy/2)}
+ ptr.set(e.pointerId,e)});
+cv.addEventListener('wheel',e=>{e.preventDefault();goal.r=clampR(goal.r*(1+e.deltaY*.001))},{passive:false});
+/* ---- action potential chart ---- */
+const K=[[0,-70],[.6,-70],[.8,-55],[1,30],[1.15,40],[1.5,5],[2,-78],[2.6,-82],[3.6,-70],[5,-70]];
+function Vm(t){if(t<=0||t>=5)return -70;let i=0;while(K[i+1][0]<t)i++;const[x0,y0]=K[i],[x1,y1]=K[i+1];
+ const m0=i?(y1-K[i-1][1])/(x1-K[i-1][0]):(y1-y0)/(x1-x0),m1=i+2<K.length?(K[i+2][1]-y0)/(K[i+2][0]-x0):(y1-y0)/(x1-x0);
+ const h=x1-x0,s=(t-x0)/h,s2=s*s,s3=s2*s;return(2*s3-3*s2+1)*y0+(s3-2*s2+s)*h*m0+(-2*s3+3*s2)*y1+(s3-s2)*h*m1}
+const ch=document.getElementById('chart'),cx=ch.getContext('2d');
+function drawChart(t){const d=devicePixelRatio||1,w=ch.clientWidth,h=ch.clientHeight;if(ch.width!=w*d){ch.width=w*d;ch.height=h*d}
+ cx.setTransform(d,0,0,d,0,0);cx.clearRect(0,0,w,h);const X=t=>44+t/5*(w-56),Y=v=>10+(50-v)/140*(h-34);
+ cx.font='10px JetBrains Mono,monospace';cx.fillStyle='#6b6b80';cx.strokeStyle='rgba(27,27,47,.15)';cx.lineWidth=1;
+ [[40,'+40'],[0,'0'],[-55,'−55 threshold'],[-70,'−70 rest']].forEach(([v,s])=>{cx.setLineDash(v==-55?[4,3]:[]);cx.beginPath();cx.moveTo(44,Y(v));cx.lineTo(w-8,Y(v));cx.stroke();cx.fillText(s,2,Y(v)+(v==-70?11:v==-55?-2:3))});
+ cx.setLineDash([]);cx.fillText('time (ms) →',w-70,h-4);cx.fillText('membrane potential (mV)',46,10);
+ const path=(a,b)=>{cx.beginPath();for(let k=a;k<=b;k+=.02)k==a?cx.moveTo(X(k),Y(Vm(k))):cx.lineTo(X(k),Y(Vm(k)));cx.stroke()};
+ cx.lineWidth=2;cx.strokeStyle='rgba(43,43,43,.28)';path(0,5);cx.strokeStyle='#e8985a';if(t>0)path(0,Math.min(t,5));
+ cx.fillStyle='#1b1b2f';cx.beginPath();cx.arc(X(Math.min(t,5)),Y(Vm(t)),5,0,7);cx.fill()}
+
+/* ---- simulation state ---- */
+let simT=0,fireT=null,nextFire=1.2,paused=false,speed=1,last=performance.now(),postG=0,syn={spawned:false},lastPh=-1;
+const PH=[['Resting potential ≈ −70 mV','The inside of the cell is negative. Na⁺/K⁺ pumps keep Na⁺ mostly outside and K⁺ mostly inside. Press Fire signal to send a spike.'],
+['1 · Depolarization','Threshold (−55 mV) is reached. Voltage-gated Na⁺ channels snap open, Na⁺ floods in, and the inside flips to about +40 mV.'],
+['2 · Repolarization','Na⁺ channels inactivate and voltage-gated K⁺ channels open. K⁺ rushes out and pulls the voltage back down.'],
+['3 · Hyperpolarization','K⁺ channels close slowly, so the voltage undershoots below rest. This refractory period keeps the signal moving forward only.'],
+['Conduction along the axon','The spike regenerates at each Node of Ranvier. Myelin insulates the stretches between nodes, so the signal “jumps” (saltatory conduction).'],
+['4 · Calcium entry','The spike arrives at the axon terminal. Voltage-gated Ca²⁺ channels open and Ca²⁺ enters, glowing the terminal.'],
+['5 · Vesicles dock','Vesicles full of neurotransmitter move to the presynaptic membrane next to the Ca²⁺ signal.'],
+['6 · Exocytosis','Vesicles fuse with the membrane and spill neurotransmitter into the synaptic cleft.'],
+['7 · Diffusion & binding','Neurotransmitter molecules diffuse across the ~20 nm cleft and bind receptors on the next neuron, which light up.'],
+['8 · Postsynaptic response','Receptor channels open and the next neuron’s voltage shifts. Leftover transmitter is reabsorbed or broken down.']];
+const phE=document.getElementById('phase'),dsE=document.getElementById('desc');
+function setPh(i){if(i==lastPh)return;lastPh=i;phE.textContent=PH[i][0];dsE.textContent=PH[i][1]}
+function fire(){fireT=simT;nextFire=simT+15;syn={spawned:false};nts.forEach(n=>{n.on=false;n.g.visible=false});vs.forEach(v=>{v.m.scale.setScalar(1);v.m.position.copy(v.home)})}
+const ease=u=>u<.5?2*u*u:1-2*(1-u)*(1-u),cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+
+function update(dt){
+ const e=fireT===null?-1:simT-fireT,pp=e<0?0:e/6,p=cl(pp,0,1);
+ paint(pp,e>=0&&pp<1.15);
+ head.visible=e>=0&&pp<1;pl.intensity=head.visible?2.2:0;
+ if(head.visible){const P=curve.getPoint(p);head.position.copy(P);pl.position.copy(P)}
+ ions.forEach((o,i)=>{o.m.visible=e>=0&&pp>.02&&pp<.98;if(!o.m.visible)return;const P=curve.getPoint(p),f=(simT*1.3+i*.137)%1,r=o.na?.95-.45*f:.5+.45*f,xo=o.na?.35+.1*o.o:-.7-.1*o.o;
+  o.m.position.set(P.x+xo,P.y+Math.cos(o.a)*r,P.z+Math.sin(o.a)*r)});
+ const ct=e<0?0:e/.7;drawChart(ct);
+ let ph=0;if(e>=0){if(ct<5.1){ph=ct<.7?0:ct<1.2?1:ct<2.2?2:ct<3.6?3:4}else ph=4}
+ /* synapse */
+ const s=e-5.7;let bg=.25;
+ if(e>=0&&s>=0){
+  ph=s<.3?5:s<.9?6:s<1.6?7:s<4?8:9;
+  vs.forEach((v,i)=>{if(i<6){const m=ease(cl(s/.7)),tg=sites[i].clone();tg.x-=.15;v.m.position.copy(v.home).lerp(tg,m);
+    const sc=s<.9?1:s>5.2?cl((s-5.2)/.6):cl(1-(s-.9)/.25);v.m.scale.setScalar(Math.max(sc,.001));if(s>5.2)v.m.position.copy(v.home)}
+   else v.m.position.set(v.home.x+Math.sin(simT*2+i)*.06,v.home.y+Math.cos(simT*1.7+i)*.06,v.home.z)});
+  if(s>=.95&&!syn.spawned){syn.spawned=true;let n=0;for(let i=0;i<6;i++)for(let k=0;k<5;k++){const o=nts[n++];o.on=true;o.from=sites[i].clone().add(new V3(.05,(rnd()-.5)*.15,(rnd()-.5)*.15));
+    const r=recs[(i+k)%recs.length];o.to=r.pos.clone().add(new V3(-.1,(rnd()-.5)*.12,(rnd()-.5)*.12));o.rec=r;o.t0=simT+k*.15;o.dur=1.4+rnd();o.ph=rnd()*6;o.bound=false}}
+  bg=.25+(s<2.5?.9*Math.exp(-s*.9):0)}
+ gm.emissiveIntensity=bg;
+ let bound=0;nts.forEach(o=>{if(!o.on)return;const u=(simT-o.t0)/o.dur;if(u<0){o.g.visible=false;return}o.g.visible=true;
+  if(u<1){const k=ease(u),wb=Math.sin(Math.PI*u)*.14;o.g.position.copy(o.from).lerp(o.to,k);o.g.position.y+=Math.sin(simT*9+o.ph)*wb;o.g.position.z+=Math.cos(simT*7+o.ph)*wb}
+  else{o.g.position.copy(o.to);o.rec.glow=1;if(!o.bound)o.bound=true;if((u-1)*o.dur>1.8){o.on=false;o.g.visible=false}else bound++}});
+ recs.forEach(r=>{r.glow*=Math.exp(-dt*speed*.5);r.mat.emissiveIntensity=r.glow*1.2});
+ postG+=(Math.min(1,bound/12)-postG)*Math.min(1,dt*speed*2.5);pm.emissiveIntensity=postG*.9;
+ setPh(ph)}
+
+function labels(){const lay=document.getElementById('cLab').checked;
+ LB.forEach(l=>{const v=l[1].clone().project(camera),x=(v.x*.5+.5)*W,y=(-v.y*.5+.5)*H,ok=lay&&v.z<1&&x>-50&&x<W+50;
+  l.el.style.display=l.ln.style.display=ok?'':'none';if(!ok)return;
+  const lx=Math.min(W-70,Math.max(70,x+l[3])),ly=Math.min(H-20,Math.max(20,y+l[4]));l.el.style.transform=`translate(${lx}px,${ly}px) translate(-50%,-50%)`;
+  l.ln.setAttribute('x1',x);l.ln.setAttribute('y1',y);l.ln.setAttribute('x2',lx);l.ln.setAttribute('y2',ly)})}
+
+function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000,.05);last=now;if(!paused)simT+=dt*speed;
+ if(document.getElementById('cAuto').checked&&simT>=nextFire)fire();
+ for(const k of['th','ph','r'])cam[k]+=(goal[k]-cam[k])*.1;cam.t.lerp(goal.t,.1);
+ camera.position.set(cam.t.x+cam.r*Math.sin(cam.ph)*Math.sin(cam.th),cam.t.y+cam.r*Math.cos(cam.ph),cam.t.z+cam.r*Math.sin(cam.ph)*Math.cos(cam.th));camera.lookAt(cam.t);
+ update(dt);renderer.render(scene,camera);labels()}
+document.getElementById('bFire').onclick=fire;
+document.getElementById('bPause').onclick=e=>{paused=!paused;e.target.textContent=paused?'▶ Play':'⏸ Pause'};
+document.getElementById('spd').oninput=e=>speed=+e.target.value;
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>go(b.dataset.v));
+setPh(0);requestAnimationFrame(loop);
+
+const $=id=>document.getElementById(id);
+$('bIn').onclick=()=>goal.r=clampR(goal.r*.8);$('bOut').onclick=()=>goal.r=clampR(goal.r*1.25);
+$('bMode').onclick=e=>{mode=mode=='rot'?'pan':'rot';e.currentTarget.textContent=mode=='rot'?'Drag: Rotate':'Drag: Move'};
+$('bReset').onclick=()=>{goal.th=.25;goal.ph=1.3;go('full')};
+function setFS(on){stage.classList.toggle('fs',on);document.documentElement.style.overflow=on?'hidden':'';
+ if(on&&stage.requestFullscreen)stage.requestFullscreen().catch(()=>{});else if(!on&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+ $('bFull').textContent=on?'✕ Exit full screen':'⤢ Full screen';setTimeout(()=>{resize();go('full')},80)}
+$('bFull').onclick=()=>setFS(!stage.classList.contains('fs'));$('bFull2').onclick=()=>setFS(true);
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&stage.classList.contains('fs'))setFS(false)});
+addEventListener('keydown',e=>{if(e.key=='Escape'&&stage.classList.contains('fs'))setFS(false)});
+</script>
+<script>
+(()=>{
+const NS='http://www.w3.org/2000/svg',INK='#2b2b2b',BG='#fbf8f3',$=id=>document.getElementById(id);
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+/* ===== neuron types ===== */
+const TY=[['Sensory (pseudounipolar)','uni','Carries touch, pain, temperature and stretch from the body toward the spinal cord.','Skin, muscles, joints','#9fb4d6'],['Motor (multipolar)','multi','Sends commands from the spinal cord and brain to muscles and glands.','Spinal cord → muscle','#e8985a'],['Interneuron','inter','Connects sensory and motor neurons and forms local circuits inside the brain and spinal cord.','Brain, spinal cord','#b8d8c4'],['Bipolar','bi','One input process, one output process. Relays specialised senses.','Retina, nose, inner ear','#c7b8e0'],['Pyramidal','pyr','Large excitatory cell with a tall apical dendrite. Key to thought and voluntary movement.','Cortex, hippocampus','#f2b8a2'],['Purkinje','purk','A flat, fan-shaped dendrite tree gathers thousands of inputs. An inhibitory (GABA) output cell that helps coordinate movement.','Cerebellum','#f0c85a']];
+function drawType(k,col){let s=7,P='';const r=()=>(s=s*16807%2147483647)/2147483647;
+ const L=(a,b,c,d,w,cl)=>P+=`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="${cl||'#9fb4d6'}" stroke-width="${w}" stroke-linecap="round"/>`;
+ const T=(x,y,a,l,d,w,cl)=>{const x2=x+Math.cos(a)*l,y2=y+Math.sin(a)*l;L(x,y,x2,y2,w,cl);if(d>0){T(x2,y2,a-.35-r()*.4,l*.74,d-1,w*.75,cl);T(x2,y2,a+.35+r()*.4,l*.74,d-1,w*.75,cl)}};
+ const S=(x,y,q)=>{const N=9,p=[];for(let i=0;i<N;i++){const a=i/N*6.283,k=q*(.86+r()*.26);p.push([x+Math.cos(a)*k,y+Math.sin(a)*k])}let d='';for(let i=0;i<N;i++){const a=p[i],b=p[(i+1)%N];if(!i){const z=p[N-1];d+=`M${(z[0]+a[0])/2} ${(z[1]+a[1])/2}`}d+=`Q${a[0]} ${a[1]} ${(a[0]+b[0])/2} ${(a[1]+b[1])/2}`}P+=`<path d="${d}Z" fill="${col}" stroke="${INK}" stroke-width="1.6"/><ellipse cx="${x}" cy="${y}" rx="${q*.38}" ry="${q*.3}" fill="#fff" fill-opacity=".6" stroke="${INK}"/><circle cx="${x+1}" cy="${y-1}" r="${q*.1}" fill="${INK}" fill-opacity=".6"/>`};
+ const AX=(x1,y,x2)=>{L(x1,y,x2,y,2.4,'#e8985a');for(let x=x1+14;x<x2-40;x+=26)P+=`<rect x="${x}" y="${y-5}" width="20" height="10" rx="5" fill="#b8d8c4" stroke="${INK}" stroke-width="1.2"/>`;T(x2-24,y,-.25,16,1,1.8,'#e8985a');T(x2-24,y,.25,16,1,1.8,'#e8985a')};
+ if(k=='uni'){L(20,120,150,120,2.4);T(20,120,Math.PI,0,0,1);T(20,120,-2.8,16,1,1.6);T(20,120,2.8,16,1,1.6);L(150,120,150,92,2.4);S(150,78,14);AX(150,120,300)}
+ if(k=='bi'){T(136,110,Math.PI,56,2,2.2);S(150,110,16);AX(166,110,300)}
+ if(k=='multi'){[3.14,2.5,3.8,1.9,4.4].forEach(a=>T(95+Math.cos(a)*18,110+Math.sin(a)*18,a,38,2,2.2));S(95,110,20);AX(115,110,300)}
+ if(k=='inter'){for(let i=0;i<6;i++)T(150+Math.cos(i)*14,110+Math.sin(i)*14,i*1.05,36,2,2);S(150,110,14)}
+ if(k=='pyr'){T(150,126,-Math.PI/2,64,3,3);T(134,148,2.6,34,2,2);T(166,148,.55,34,2,2);T(150,150,1.57,0,0,1);P+=`<polygon points="150,122 126,152 174,152" fill="${col}" stroke="${INK}" stroke-width="1.6"/>`;L(150,152,150,215,2.4,'#e8985a')}
+ if(k=='purk'){L(150,178,150,138,4);T(150,138,-Math.PI/2,52,4,3);S(150,190,13);L(150,203,150,218,2.2,'#e8985a')}
+ return `<svg viewBox="0 0 320 220">${P}</svg>`}
+$('tgrid').innerHTML=TY.map(t=>`<div class="cream tc">${drawType(t[1],t[4])}<b>${t[0]}</b><p>${t[2]}</p><span>${t[3]}</span></div>`).join('');
+/* ===== synapse types ===== */
+const SY=[['Excitatory chemical','exc','Transmitter opens Na⁺ channels, moving the next neuron toward firing.'],['Inhibitory chemical','inh','Transmitter opens Cl⁻ channels, moving the next neuron away from firing.'],['Electrical (gap junction)','elec','Tiny channels join two cells so ions flow directly. Very fast; common in the heart and some brain circuits.'],['Axo-dendritic','ad','The most common contact: an axon ends on a dendrite or a small spine.'],['Axo-somatic','as','An axon ends on the cell body. Strong control over whether the cell fires.'],['Axo-axonic','aa','An axon ends on another axon’s terminal and tunes how much it releases.']];
+function sSvg(k){let P='';const C=(x,y,r,f)=>P+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${f}" stroke="${INK}" stroke-width="1.3"/>`;
+ const Rc=(x,y,w,h,f,rx)=>P+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx||6}" fill="${f}" stroke="${INK}" stroke-width="1.3"/>`;
+ const X=(x,y,t,c)=>P+=`<text x="${x}" y="${y}" font-size="9" font-family="JetBrains Mono,monospace" fill="${c||INK}" text-anchor="middle">${t}</text>`;
+ const Ln=(a,b,c,d,col,w)=>P+=`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="${col}" stroke-width="${w||3}" stroke-linecap="round"/>`;
+ if(k=='exc'||k=='inh'){const col=k=='exc'?'#6fae8a':'#d9776b';P+=`<path d="M55 0Q55 46 100 48Q145 46 145 0Z" fill="#9fcfa8" stroke="${INK}" stroke-width="1.3"/>`;[[80,16],[100,26],[120,16],[90,34],[112,36]].forEach(([x,y])=>C(x,y,6,col));Rc(30,84,140,36,'#9fb4d6',4);[70,100,130].forEach(x=>Rc(x-6,78,12,8,'#e8985a',2));X(100,106,k=='exc'?'Na⁺ flows in':'Cl⁻ flows in')}
+ if(k=='elec'){Rc(8,24,80,70,'#9fb4d6');Rc(112,24,80,70,'#9fb4d6');[40,59,78].forEach(y=>Rc(88,y-5,24,10,'#e8985a',2));X(100,16,'connexons');X(100,112,'ions pass directly')}
+ if(k=='ad'){Rc(15,80,170,16,'#9fb4d6',8);Rc(94,64,12,18,'#9fb4d6',4);Ln(100,0,100,40,'#e8985a');C(100,52,12,'#9fcfa8');X(100,114,'dendrite + spine')}
+ if(k=='as'){Ln(100,0,100,28,'#e8985a');C(100,100,40,'#f2b8a2');C(100,100,14,'#fff');C(100,40,12,'#9fcfa8')}
+ if(k=='aa'){Ln(60,0,60,70,'#9fb4d6',5);C(60,84,14,'#9fb4d6');Ln(190,20,96,74,'#e8985a');C(84,80,10,'#9fcfa8');X(150,112,'modulates release')}
+ return `<svg viewBox="0 0 200 120">${P}</svg>`}
+$('sgrid').innerHTML=SY.map(t=>`<div class="cream tc">${sSvg(t[1])}<b>${t[0]}</b><p>${t[2]}</p></div>`).join('');
+/* ===== neurotransmitters ===== */
+const NT=[
+{n:'Glutamate',c:'#6fae8a',sh:3,k:'exc',kn:'Excitatory',cu:'pump',role:'The brain’s main “go” signal. It drives learning and memory.',rec:'AMPA and NMDA receptors open Na⁺ and Ca²⁺ channels.',cl:'Astrocytes re-absorb it with transporters.',m:{a:[[0,0],[0,-1,'O'],[-.87,.5,'HO'],[.87,.5],[1.73,0],[2.6,.5],[2.6,1.5,'NH₂'],[3.46,0],[3.46,-1,'O'],[4.33,.5,'OH']],b:[[0,1,2],[0,2],[0,3],[3,4],[4,5],[5,6],[5,7],[7,8,2],[7,9]]}},
+{n:'GABA',c:'#d9776b',sh:4,k:'inh',kn:'Inhibitory',cu:'pump',role:'The main “brake”. It calms circuits and prevents runaway firing.',rec:'GABA-A receptors open Cl⁻ channels so the cell becomes more negative.',cl:'Transporters pull it back into neurons and glia.',m:{a:[[0,0,'H₂N'],[.87,.5],[1.73,0],[2.6,.5],[3.46,0],[3.46,-1,'O'],[4.33,.5,'OH']],b:[[0,1],[1,2],[2,3],[3,4],[4,5,2],[4,6]]}},
+{n:'Acetylcholine',c:'#e0a43c',sh:0,k:'exc',kn:'Excitatory · muscle',cu:'enz',role:'Makes muscles contract and supports attention and memory.',rec:'Nicotinic receptors are channels; muscarinic ones signal through G-proteins.',cl:'The enzyme acetylcholinesterase cuts it apart within milliseconds.',m:{a:[[0,0],[.87,.5],[.87,1.5,'O'],[1.73,0,'O'],[2.6,.5],[3.46,0],[4.33,.5,'N⁺'],[4.33,1.5],[5.2,0],[4.33,-.5]],b:[[0,1],[1,2,2],[1,3],[3,4],[4,5],[5,6],[6,7],[6,8],[6,9]]}},
+{n:'Dopamine',c:'#7a8fd0',sh:5,k:'mod',kn:'Modulatory',cu:'pump',role:'Reward, motivation and smooth movement. It tunes circuits rather than switching them on.',rec:'D1 and D2 receptors act through G-proteins and second messengers.',cl:'The dopamine transporter (DAT) re-absorbs it.',m:{a:[[0,-1],[.87,-.5],[.87,.5],[0,1],[-.87,.5],[-.87,-.5],[1.73,-1],[2.6,-.5],[3.46,-1,'NH₂'],[0,2,'OH'],[-1.73,1,'HO']],b:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[1,6],[6,7],[7,8],[3,9],[4,10]],r:[[0,0]]}},
+{n:'Serotonin',c:'#b07fc8',sh:6,k:'mod',kn:'Modulatory',cu:'pump',role:'Mood, sleep and appetite. Most of it is made in the gut.',rec:'Mostly G-protein receptors, which slowly change how excitable a cell is.',cl:'The serotonin transporter (SERT) re-absorbs it. SSRI drugs block SERT.',m:{a:[[0,-1],[.87,-.5],[.87,.5],[0,1],[-.87,.5],[-.87,-.5],[1.82,.8,'NH'],[2.4,0],[1.82,-.8],[1.82,-1.8],[2.69,-2.3],[3.55,-1.8,'NH₂'],[-1.73,1,'HO']],b:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[2,6],[6,7],[7,8,2],[8,1],[8,9],[9,10],[10,11],[4,12]],r:[[0,0]]}},
+{n:'Norepinephrine',c:'#d98a4a',sh:8,k:'mod',kn:'Modulatory',cu:'pump',role:'Alertness and the fight-or-flight response.',rec:'Alpha and beta receptors signal through G-proteins.',cl:'The norepinephrine transporter (NET) re-absorbs it.',m:{a:[[0,-1],[.87,-.5],[.87,.5],[0,1],[-.87,.5],[-.87,-.5],[1.73,-1],[2.6,-.5],[3.46,-1,'NH₂'],[0,2,'OH'],[-1.73,1,'HO'],[2.6,.5,'OH']],b:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[1,6],[6,7],[7,8],[3,9],[4,10],[7,11]],r:[[0,0]]}}];
+function mol(m){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;m.a.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)});
+ const S=36,pd=1,X=x=>(x-x0+pd)*S,Y=y=>(y-y0+pd)*S;let o='';
+ (m.r||[]).forEach(([cx,cy])=>o+=`<circle cx="${X(cx)}" cy="${Y(cy)}" r="${.55*S}" fill="none" stroke="${INK}" stroke-width="1.5"/>`);
+ m.b.forEach(([i,j,od])=>{const A=m.a[i],B=m.a[j],dx=B[0]-A[0],dy=B[1]-A[1],l=Math.hypot(dx,dy),ux=dx/l,uy=dy/l,sa=A[2]?.34:0,sb=B[2]?.34:0;
+  (od==2?[-.07,.07]:[0]).forEach(f=>{const nx=-uy*f,ny=ux*f;o+=`<line x1="${X(A[0]+ux*sa+nx)}" y1="${Y(A[1]+uy*sa+ny)}" x2="${X(B[0]-ux*sb+nx)}" y2="${Y(B[1]-uy*sb+ny)}" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>`})});
+ m.a.forEach(([x,y,l])=>{if(l)o+=`<text x="${X(x)}" y="${Y(y)+5}" text-anchor="middle" font-size="15" font-weight="600" font-family="Inter,sans-serif" fill="${/N/.test(l)?'#4a6fb5':'#d0503c'}">${l}</text>`});
+ return `<svg viewBox="0 0 ${(x1-x0+2*pd)*S} ${(y1-y0+2*pd)*S}" style="width:100%;max-height:230px">${o}</svg>`}
+const cvs=$('syn2d'),g=cvs.getContext('2d');let cw=600,chh=320,cur=0,t=0,parts=[],spawned=false,pot=0,lastT=performance.now(),lastPh=-1;
+const rc=[.2,.35,.5,.65,.8].map(f=>({f,b:null}));
+function rs(){const d=devicePixelRatio||1;cw=cvs.clientWidth||600;chh=cvs.clientHeight||320;cvs.width=cw*d;cvs.height=chh*d;g.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',rs);rs();
+function poly(x,y,q,n){g.beginPath();if(!n){g.arc(x,y,q,0,6.283);return}for(let i=0;i<n;i++){const a=i/n*6.283-1.571;g[i?'lineTo':'moveTo'](x+Math.cos(a)*q,y+Math.sin(a)*q)}g.closePath()}
+function reset(){t=0;parts=[];spawned=false;pot=0;rc.forEach(r=>r.b=null)}
+function showNT(i){cur=i;reset();const N=NT[i];document.querySelectorAll('#ntbtn .btn').forEach((b,j)=>b.classList.toggle('on',j==i));$('mol').innerHTML=mol(N.m);$('ntinfo').innerHTML=`<span class="badge" style="background:${N.c}">${N.kn}</span><h3>${N.n}</h3><p>${N.role}</p><p><b>Receptor:</b> ${N.rec}</p><p><b>Cleanup:</b> ${N.cl}</p>`}
+$('ntbtn').innerHTML=NT.map((n,i)=>`<button class="btn" data-i="${i}"><i style="background:${n.c}"></i>${n.n}</button>`).join('');
+$('ntbtn').onclick=e=>{const b=e.target.closest('button');if(b)showNT(+b.dataset.i)};$('bReplay').onclick=reset;
+function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-lastT)/1000,.05);lastT=now;if(!cvs.clientWidth)return;if(Math.abs(cvs.clientWidth-cw)>2)rs();
+ t+=dt;if(t>12)reset();const N=NT[cur],preY=chh*.3,postY=chh*.72;
+ if(t>1.3&&!spawned){spawned=true;for(let i=0;i<18;i++)parts.push({x:cw*(.4+.2*Math.random()),y:preY+4,vx:(Math.random()-.5)*60,vy:20,st:0,ti:i%5,tries:0,bt:0,life:1})}
+ parts.forEach(p=>{const Rr=rc[p.ti],tx=cw*Rr.f,ty=postY-14;
+  if(p.st==0){p.vx+=(tx-p.x)*1.1*dt+(Math.random()-.5)*500*dt;p.vy+=(ty-p.y)*1.1*dt+(Math.random()-.5)*500*dt;p.vx*=.96;p.vy*=.96;p.x+=p.vx*dt;p.y=Math.min(p.y+p.vy*dt,postY-8);
+   if(Math.hypot(tx-p.x,ty-p.y)<9){if(!Rr.b){Rr.b=p;p.st=1;p.bt=t;p.x=tx;p.y=ty}else{p.tries++;p.ti=(p.ti+1)%5;if(p.tries>3)p.st=2}}}
+  else if(p.st==1){if(t-p.bt>2.6){p.st=2;Rr.b=null}}
+  else if(N.cu=='enz'){p.life-=dt*.9;p.x+=Math.sin(t*30+p.x)*.6}else{const tp=cw*(p.x<cw/2?.27:.73);p.x+=(tp-p.x)*1.2*dt;p.y-=70*dt;if(p.y<preY+4)p.life=0}});
+ parts=parts.filter(p=>p.life>0);const nb=parts.filter(p=>p.st==1).length;pot+=((N.k=='exc'?nb:N.k=='inh'?-nb:0)-pot)*dt*3;
+ g.clearRect(0,0,cw,chh);g.lineWidth=1.5;g.strokeStyle=INK;
+ g.fillStyle='#dcebd9';g.beginPath();g.moveTo(cw*.18,-5);g.lineTo(cw*.18,preY-24);g.quadraticCurveTo(cw*.18,preY,cw*.18+26,preY);g.lineTo(cw*.82-26,preY);g.quadraticCurveTo(cw*.82,preY,cw*.82,preY-24);g.lineTo(cw*.82,-5);g.closePath();g.fill();g.stroke();
+ g.fillStyle='#dfe7f3';g.fillRect(0,postY,cw,chh-postY);g.beginPath();g.moveTo(0,postY);g.lineTo(cw,postY);g.stroke();
+ g.font='italic 13px Newsreader,serif';g.fillStyle=INK;g.fillText('presynaptic terminal',cw*.2,22);g.fillText('synaptic cleft',cw*.04,(preY+postY)/2);g.fillText('postsynaptic neuron',cw*.04,chh-12);
+ [.3,.4,.5,.6,.7].forEach((f,i)=>{const mv=i>0&&i<4?Math.min(1,Math.max(0,(t-.2)/1)):0,al=i>0&&i<4?Math.max(0,1-Math.max(0,(t-1.1)/.3)):1;if(al<=0)return;g.globalAlpha=al;g.fillStyle=N.c;g.beginPath();g.arc(cw*f,preY-34+mv*24,9,0,6.283);g.fill();g.stroke();g.globalAlpha=1});
+ if(N.cu=='enz'){g.setLineDash([4,3]);g.beginPath();g.moveTo(cw*.2,(preY+postY)/2+8);g.lineTo(cw*.8,(preY+postY)/2+8);g.stroke();g.setLineDash([]);g.fillStyle=INK;g.font='11px JetBrains Mono,monospace';g.fillText('enzyme zone (AChE)',cw*.4,(preY+postY)/2+24)}
+ else[.27,.73].forEach(f=>{g.fillStyle='#fbf8f3';g.beginPath();g.rect(cw*f-9,preY-4,18,8);g.fill();g.stroke();g.fillStyle=INK;g.font='10px JetBrains Mono,monospace';g.fillText('pump',cw*f-12,preY+16)});
+ rc.forEach(Rr=>{const x=cw*Rr.f;g.beginPath();g.moveTo(x,postY);g.lineTo(x,postY-6);g.stroke();poly(x,postY-14,9,N.sh);g.fillStyle=Rr.b?N.c:BG;g.setLineDash(Rr.b?[]:[3,2]);g.fill();g.stroke();g.setLineDash([]);
+  if(Rr.b){if(N.k=='mod'){g.fillStyle='#c7b8e0';g.beginPath();g.arc(x,postY+24,8,0,6.283);g.fill();g.stroke();g.fillStyle=INK;g.font='10px Inter,sans-serif';g.fillText('G',x-3,postY+28)}
+   else for(let j=0;j<3;j++){g.fillStyle=N.k=='exc'?'#6fae8a':'#d9776b';g.beginPath();g.arc(x+(j-1)*4,postY+4+((t*45+j*13)%38),3,0,6.283);g.fill()}}});
+ parts.forEach(p=>{g.globalAlpha=p.life;g.fillStyle=N.c;poly(p.x,p.y,5.5,N.sh);g.fill();g.stroke();g.globalAlpha=1});
+ const bx=cw*.5,by=chh-34,mv=Math.max(-70,Math.min(70,pot*7));g.strokeStyle='#c9c1ae';g.beginPath();g.moveTo(bx-80,by);g.lineTo(bx+80,by);g.stroke();g.fillStyle=N.k=='mod'?'#c7b8e0':N.c;g.strokeStyle=INK;g.beginPath();g.arc(bx+mv,by,6,0,6.283);g.fill();g.stroke();
+ g.fillStyle=INK;g.font='11px JetBrains Mono,monospace';g.fillText(N.k=='mod'?'second messengers retune the cell':'membrane '+(-70+pot*2.2).toFixed(0)+' mV',bx-80,by+20);
+ const ph=t<1.3?0:t<3.6?1:t<8?2:3;if(ph!=lastPh){lastPh=ph;$('syncap').textContent=['1 · Vesicles fuse with the membrane and release neurotransmitter.','2 · Molecules diffuse across the cleft, about 20 nm wide.','3 · Each molecule fits only its own receptor shape, like a key in a lock. '+N.rec,'4 · Cleanup: '+N.cl][ph]}}
+showNT(0);requestAnimationFrame(frame);
+/* ===== build your own network ===== */
+const bs=$('bsvg');bs.innerHTML='<defs><radialGradient id="nGlow"><stop offset="0" stop-color="#f6cf5f" stop-opacity=".95"/><stop offset="1" stop-color="#f6cf5f" stop-opacity="0"/></radialGradient><radialGradient id="nShade" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></radialGradient></defs>';const gE=el('g',{},bs),gN=el('g',{},bs),gP=el('g',{},bs);
+const BT={sensory:'#9fb4d6',inter:'#b8d8c4',motor:'#e8985a',pyr:'#f2b8a2'},NC={glu:'#6fae8a',gaba:'#d9776b',ach:'#e0a43c',da:'#7a8fd0','5ht':'#b07fc8',el:'#888'};
+const SO=[['exc','glu','Excitatory · glutamate',.55],['inh','gaba','Inhibitory · GABA',.6],['exc','ach','Excitatory · acetylcholine',.7],['mod','da','Modulatory · dopamine',.3],['mod','5ht','Modulatory · serotonin',.3],['elec','el','Electrical · gap junction',.5]];
+$('bSyn').innerHTML=SO.map((o,i)=>`<option value="${i}">${o[2]}</option>`).join('');
+const RD=20;let nodes=[],edges=[],uid=1,eid=1,sel=null,drag=null,dirty=true,BW=700,BH=470,defI=0,defW=.55,lastTap={id:0,t:0},lt=performance.now(),msg='';
+const byId=id=>nodes.find(n=>n.id==id),lab=n=>(n.type=='pyr'?'pyramidal':n.type)+' '+n.id;
+function stat(m){if(m)msg=m;$('bstat').textContent=`${nodes.length} neurons · ${edges.length} synapses${msg?' · '+msg:''}`}
+function addN(type,x,y){const n={id:uid++,type,x,y,v:0,ref:0,fl:0,gain:1,next:2+Math.random()*3,ang:Math.random()*2};nodes.push(n);dirty=true;stat();return n}
+function geo(e){const a=byId(e.a),b=byId(e.b);if(!a||!b)return null;const x0=a.x+RD+12,y0=a.y,dx=b.x-x0,dy=b.y-y0,len=Math.hypot(dx,dy)||1,cx=(x0+b.x)/2-dy*.2,cy=(y0+b.y)/2+dx*.2,ux=b.x-cx,uy=b.y-cy,ul=Math.hypot(ux,uy)||1;return{x0,y0,cx,cy,x1:b.x-ux/ul*(RD+3),y1:b.y-uy/ul*(RD+3),ux:ux/ul,uy:uy/ul,len}}
+const qp=(q,t)=>{const m=1-t;return[m*m*q.x0+2*m*t*q.cx+t*t*q.x1,m*m*q.y0+2*m*t*q.cy+t*t*q.y1]};
+function render(){while(gE.firstChild)gE.removeChild(gE.firstChild);while(gN.firstChild)gN.removeChild(gN.firstChild);
+ edges.forEach(e=>{const q=geo(e);if(!q)return;const d=`M${q.x0} ${q.y0}Q${q.cx} ${q.cy} ${q.x1} ${q.y1}`,on=sel&&sel.k=='e'&&sel.id==e.id,col=NC[e.nt];
+  el('path',{d,fill:'none',stroke:on?'#e8985a':INK,'stroke-opacity':on?1:.6,'stroke-width':1+e.w*2.5,'stroke-dasharray':e.k=='elec'?'3 3':e.k=='mod'?'8 3':'none'},gE);
+  const nx=-q.uy,ny=q.ux;if(e.k=='inh')el('line',{x1:q.x1-nx*8,y1:q.y1-ny*8,x2:q.x1+nx*8,y2:q.y1+ny*8,stroke:col,'stroke-width':4,'stroke-linecap':'round'},gE);
+  else if(e.k=='elec'){[-2,2].forEach(o=>el('line',{x1:q.x1-nx*7-q.ux*o,y1:q.y1-ny*7-q.uy*o,x2:q.x1+nx*7-q.ux*o,y2:q.y1+ny*7-q.uy*o,stroke:INK,'stroke-width':2},gE))}
+  else el('circle',{cx:q.x1,cy:q.y1,r:5.5,fill:col,stroke:INK,'stroke-width':1.2},gE);
+  el('path',{d,fill:'none',stroke:'transparent','stroke-width':16,'data-e':e.id,style:'cursor:pointer'},gE)});
+ if(drag&&drag.k=='c'){const a=byId(drag.from);if(a)el('line',{x1:a.x+RD+12,y1:a.y,x2:drag.x,y2:drag.y,stroke:INK,'stroke-dasharray':'4 3'},gE)}
+ nodes.forEach(n=>{const g=el('g',{transform:`translate(${n.x},${n.y})`,'data-n':n.id,style:'cursor:grab',class:'nrn'+(n.born?'':' born')},gN),col=BT[n.type];n.born=1;
+  if(!n.shp)n.shp=nShape(n);const S=n.shp;
+  n.flc=el('circle',{r:RD+16,fill:'url(#nGlow)',opacity:0},g);
+  S.den.forEach(d=>el('path',{d:d.d,fill:'none',stroke:INK,'stroke-opacity':.75,'stroke-width':d.w+1.6,'stroke-linecap':'round','stroke-linejoin':'round'},g));
+  S.den.forEach(d=>el('path',{d:d.d,fill:'none',stroke:col,'stroke-width':d.w,'stroke-linecap':'round','stroke-linejoin':'round'},g));
+  S.spn.forEach(p=>el('circle',{cx:p[0],cy:p[1],r:1.3,fill:col,stroke:INK,'stroke-width':.6},g));
+  el('path',{d:S.ax,fill:'none',stroke:INK,'stroke-width':4.2,'stroke-linecap':'round'},g);el('path',{d:S.ax,fill:'none',stroke:'#e8985a','stroke-width':2.6,'stroke-linecap':'round'},g);
+  S.my.forEach(m=>el('rect',{x:m,y:-3.6,width:7,height:7.2,rx:3.2,fill:'#f3e6c8',stroke:INK,'stroke-width':1},g));
+  el('path',{d:S.soma,fill:col,stroke:INK,'stroke-width':1.6},g);
+  el('path',{d:S.soma,fill:'url(#nShade)',stroke:'none'},g);
+  el('ellipse',{cx:S.nx,cy:S.ny,rx:S.nr,ry:S.nr*.8,fill:'#fff','fill-opacity':.55,stroke:INK,'stroke-width':1},g);el('circle',{cx:S.nx+1.5,cy:S.ny-1,r:1.8,fill:INK,'fill-opacity':.7},g);
+  n.ring=el('path',{d:S.soma,fill:'none','stroke-width':2.4,'stroke-linecap':'round',transform:'scale(1.45)'},g);n.rl=n.ring.getTotalLength?n.ring.getTotalLength():150;
+  el('circle',{cx:RD+12,r:5.5,fill:BG,stroke:INK,'stroke-width':1.4,'data-port':n.id,style:'cursor:crosshair',class:'port'},g);
+  if(sel&&sel.k=='n'&&sel.id==n.id)el('circle',{r:RD+22,fill:'none',stroke:INK,'stroke-dasharray':'3 3',class:'selr'},g);
+  const t=el('text',{y:RD+34,'text-anchor':'middle','font-size':10,'font-family':'JetBrains Mono,monospace',fill:INK},g);t.textContent=lab(n)})}
+/* organic neuron morphology, deterministic per neuron */
+function nShape(n){let s=n.id*9301+n.type.length*49297;const r=()=>(s=(s*16807)%2147483647)/2147483647,f=v=>v.toFixed(1);
+ const den=[],spn=[];
+ const br=(x,y,a,l,w,d)=>{const bend=(r()-.5)*.6,mx=x+Math.cos(a+bend)*l*.5,my=y+Math.sin(a+bend)*l*.5,ex=x+Math.cos(a)*l,ey=y+Math.sin(a)*l;
+  den.push({d:`M${f(x)} ${f(y)}Q${f(mx)} ${f(my)} ${f(ex)} ${f(ey)}`,w});if(w>1.2&&r()<.6)spn.push([mx+(r()-.5)*4,my+(r()-.5)*4]);
+  if(d>0){const k=r()<.25?1:2;for(let i=0;i<k;i++)br(ex,ey,a+(k==1?(r()-.5)*.5:(i?1:-1)*(.3+r()*.45)),l*(.6+r()*.15),Math.max(.9,w*.65),d-1)}};
+ const blob=(R,sx,sy,pts)=>{const P=[];const N=pts||9;for(let i=0;i<N;i++){const a=i/N*6.283,q=R*(.82+r()*.32);P.push([Math.cos(a)*q*(sx||1),Math.sin(a)*q*(sy||1)])}
+  let d='';for(let i=0;i<N;i++){const p=P[i],q=P[(i+1)%N],m=[(p[0]+q[0])/2,(p[1]+q[1])/2];if(!i){const z=P[N-1];d+=`M${f((z[0]+p[0])/2)} ${f((z[1]+p[1])/2)}`}d+=`Q${f(p[0])} ${f(p[1])} ${f(m[0])} ${f(m[1])}`}return d+'Z'};
+ let soma,ax=`M${RD*.55} 0C${RD*.8} 1 ${RD} -1 ${RD+12} 0`,my=[],nx=0,ny=0,nr=4.5;
+ if(n.type=='sensory'){soma=blob(9,1.1,1);nx=-1;ny=-1;nr=3.5;
+  den.push({d:`M-8 0C-18 6 -26 -4 -34 2`,w:2.4});br(-34,2,Math.PI+.2,10,1.6,2);ax=`M8 0C14 -3 20 3 ${RD+12} 0`;}
+ else if(n.type=='inter'){soma=blob(10,1,1);nr=3.8;for(let k=0;k<6;k++){const a=k/6*6.283+r()*.6;if(Math.abs(a%6.283)<.5)continue;br(Math.cos(a)*8,Math.sin(a)*8,a,9+r()*5,2.2,2)}}
+ else if(n.type=='motor'){soma=blob(14,1.05,.95,11);nr=5;for(let k=0;k<7;k++){const a=.8+k*.68+(r()-.5)*.3;br(Math.cos(a)*12,Math.sin(a)*12,a,12+r()*6,3,2)}
+  ax=`M13 0L${RD+12} 0`;my=[RD-4]}
+ else{ // pyramidal
+  soma='M0 -15C3 -8 9 2 12 9C6 12 -6 12 -12 9C-9 2 -3 -8 0 -15Z';ny=2;nr=4.2;
+  br(0,-14,-Math.PI/2,14,3,1);const tx=0,ty=-28;br(tx,ty,-Math.PI/2-.4,10,1.8,1);br(tx,ty,-Math.PI/2+.4,10,1.8,1);
+  br(-10,9,2.5,9,2,1);br(10,9,.6,9,2,1);br(0,11,1.57,7,1.6,1);ax=`M10 6C16 8 20 2 ${RD+12} 0`}
+ return{soma,den,spn,ax,my,nx,ny,nr}}
+function fire(n){window.NL&&NL.fire(n);n.v=0;n.ref=.35;n.fl=1;edges.filter(e=>e.a==n.id).forEach(e=>{const q=geo(e);if(q)e.p.push({t:0,d:(.3+q.len/520)*(e.k=='mod'?2.4:e.k=='elec'?.3:1)})});stat(lab(n)+' fired')}
+function connect(a,b){if(a==b||!byId(a)||!byId(b))return;let e=edges.find(x=>x.a==a&&x.b==b);const o=SO[defI];if(!e){e={id:eid++,a,b,p:[]};edges.push(e)}Object.assign(e,{k:o[0],nt:o[1],w:defW,si:defI});sel={k:'e',id:e.id};stat(lab(byId(a))+' → '+lab(byId(b)));dirty=true}
+function syncCtl(){if(sel&&sel.k=='e'){const e=edges.find(x=>x.id==sel.id);if(e){$('bSyn').value=e.si;$('bW').value=e.w}}}
+const pt=e=>{const r=bs.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+bs.addEventListener('pointerdown',e=>{const[x,y]=pt(e),t=e.target,port=t.getAttribute&&t.getAttribute('data-port'),gn=t.closest&&t.closest('[data-n]'),ge=t.closest&&t.closest('[data-e]');try{bs.setPointerCapture(e.pointerId)}catch(_){}
+ if(port)drag={k:'c',from:+port,x,y};else if(gn){const n=byId(+gn.getAttribute('data-n'));sel={k:'n',id:n.id};drag={k:'m',n,dx:x-n.x,dy:y-n.y,mv:0}}else if(ge){sel={k:'e',id:+ge.getAttribute('data-e')};syncCtl();drag=null}else{sel=null;drag=null}dirty=true});
+bs.addEventListener('pointermove',e=>{if(!drag)return;const[x,y]=pt(e);if(drag.k=='m'){drag.mv+=Math.abs(x-drag.n.x-drag.dx)+Math.abs(y-drag.n.y-drag.dy);drag.n.x=Math.min(BW-30,Math.max(30,x-drag.dx));drag.n.y=Math.min(BH-40,Math.max(30,y-drag.dy))}else{drag.x=x;drag.y=y}dirty=true});
+bs.addEventListener('pointerup',e=>{if(!drag)return;const[x,y]=pt(e);if(drag.k=='c'){const m=nodes.find(n=>n.id!=drag.from&&Math.hypot(n.x-x,n.y-y)<RD+14);if(m)connect(drag.from,m.id)}
+ else if(drag.k=='m'&&drag.mv<6){const now=performance.now();if(lastTap.id==drag.n.id&&now-lastTap.t<400){fire(drag.n);window.showPane&&showPane('body')}lastTap={id:drag.n.id,t:now}}drag=null;dirty=true});
+document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const n=addN(b.dataset.add,60+Math.random()*(BW-140),50+Math.random()*(BH-120));sel={k:'n',id:n.id}});
+$('bSyn').onchange=e=>{const i=+e.target.value;if(sel&&sel.k=='e'){const x=edges.find(q=>q.id==sel.id);if(x){Object.assign(x,{k:SO[i][0],nt:SO[i][1],si:i,w:SO[i][3]});$('bW').value=x.w}}else{defI=i;defW=SO[i][3];$('bW').value=defW}dirty=true};
+$('bW').oninput=e=>{const w=+e.target.value;if(sel&&sel.k=='e'){const x=edges.find(q=>q.id==sel.id);if(x)x.w=w}else defW=w;dirty=true};
+$('bFireN').onclick=()=>{if(!nodes.length){stat('add a neuron first');return}window.showPane&&showPane('body');if(sel&&sel.k=='n')return fire(byId(sel.id));const s=nodes.filter(n=>n.type=='sensory');(s.length?s:nodes.filter(n=>!edges.some(e=>e.b==n.id))).forEach(fire)};
+$('bDel').onclick=()=>{if(!sel)return;if(sel.k=='n'){edges=edges.filter(e=>e.a!=sel.id&&e.b!=sel.id);nodes=nodes.filter(n=>n.id!=sel.id)}else edges=edges.filter(e=>e.id!=sel.id);sel=null;dirty=true;stat()};
+$('bClr').onclick=()=>{nodes=[];edges=[];sel=null;dirty=true;msg='';stat()};
+function preset(k){nodes=[];edges=[];uid=eid=1;sel=null;const N=(t,fx,fy)=>addN(t,fx*BW,fy*BH).id,E=(a,b,i,w)=>edges.push({id:eid++,a,b,k:SO[i][0],nt:SO[i][1],w,si:i,p:[]});
+ if(k=='reflex'){const s=N('sensory',.12,.5),i=N('inter',.4,.5),m1=N('motor',.74,.28),m2=N('motor',.74,.75);E(s,i,0,1.05);E(i,m1,2,1.05);E(i,m2,1,1.05)}
+ if(k=='conv'){const a=N('sensory',.1,.2),b=N('sensory',.1,.5),c=N('sensory',.1,.8),i=N('inter',.45,.5),m=N('motor',.8,.5);E(a,i,0,.55);E(b,i,0,.55);E(c,i,0,.55);E(i,m,0,1.05)}
+ if(k=='loop'){const a=N('inter',.25,.3),b=N('inter',.7,.3),c=N('inter',.48,.78);E(a,b,0,1.05);E(b,c,0,1.05);E(c,a,0,1.05)}
+ if(k=='brake'){const s=N('sensory',.12,.5),i=N('inter',.45,.2),m=N('motor',.8,.5);E(s,m,0,1.05);E(s,i,0,1.05);E(i,m,1,1.05)}
+ dirty=true;stat(k=='reflex'?'press Fire':'press Fire or turn on spontaneous input')}
+$('bPre').onchange=e=>{if(e.target.value)preset(e.target.value);e.target.value=''};
+function rsB(){BW=bs.clientWidth||700;BH=bs.clientHeight||470;bs.setAttribute('viewBox',`0 0 ${BW} ${BH}`)}
+addEventListener('resize',rsB);rsB();preset('reflex');
+const CIRC=2*Math.PI*(RD+8);
+function sim(now){requestAnimationFrame(sim);const dt=Math.min((now-lt)/1000,.05);lt=now;const spon=$('bSpon').checked;
+ nodes.forEach(n=>{n.v*=Math.exp(-dt*1.1);n.ref-=dt;n.fl=Math.max(0,n.fl-dt*2.5);n.gain=1+(n.gain-1)*Math.exp(-dt*.4);if(spon&&n.type=='sensory'){n.next-=dt;if(n.next<=0){n.next=2.5+Math.random()*3;fire(n)}}});
+ edges.forEach(e=>{e.p=e.p.filter(p=>{p.t+=dt;if(p.t<p.d)return true;const m=byId(e.b);if(m){window.NL&&NL.arrive(e,m);if(e.k=='inh')m.v=Math.max(-.8,m.v-e.w);else if(m.ref<=0){m.v+=e.w*m.gain*(e.k=='mod'?.5:e.k=='elec'?.9:1);if(e.k=='mod')m.gain=1.7}if(m.v>=1&&m.ref<=0)fire(m)}return false})});
+ if(dirty){render();dirty=false}
+ nodes.forEach(n=>{if(!n.ring)return;n.ring.setAttribute('stroke-dasharray',`${Math.min(1,Math.abs(n.v))*n.rl} ${n.rl}`);n.ring.setAttribute('stroke',n.v<0?'#d9776b':'#e8985a');n.flc.setAttribute('opacity',n.fl*.9)});
+ while(gP.firstChild)gP.removeChild(gP.firstChild);
+ edges.forEach(e=>{const q=geo(e);if(!q)return;e.p.forEach(p=>{const[x,y]=qp(q,Math.min(1,p.t/p.d));el('circle',{cx:x,cy:y,r:e.k=='mod'?6:4.8,fill:NC[e.nt],stroke:INK,'stroke-width':1},gP)})})}
+requestAnimationFrame(sim);
+/* ===== nervous system ===== */
+const NSD={ns:['Nervous system','About 86 billion neurons in the brain alone, plus a similar number of non-neuronal cells. It senses, decides and acts.'],cns:['Central nervous system','Brain and spinal cord, where signals are processed. Most of its neurons are neither sensory nor motor but interneurons.'],brain:['Brain','Cerebrum: thinking, senses and voluntary movement. Cerebellum: balance and fine-tuning. Brainstem: breathing and heartbeat.'],cord:['Spinal cord','A highway between body and brain, and the control centre for reflexes that skip the brain for speed.'],pns:['Peripheral nervous system','All the nerves outside the brain and cord. They carry sensory signals in and motor commands out.'],som:['Somatic','Sensory neurons bring in touch, pain and position. Motor neurons drive voluntary muscles using acetylcholine.'],aut:['Autonomic','Automatic control of the heart, glands and organs, through two opposing branches.'],sym:['Sympathetic','Fight or flight: faster heartbeat, wider pupils, more blood to muscles. Uses norepinephrine.'],par:['Parasympathetic','Rest and digest: slower heartbeat, active digestion. Uses acetylcholine.'],ent:['Enteric','A network of hundreds of millions of neurons in the gut wall. It can run digestion largely on its own, so it is often called the “second brain”.']};
+function ns(k){$('nsd').innerHTML=`<b>${NSD[k][0]}</b>${NSD[k][1]}`;document.querySelectorAll('[data-ns]').forEach(b=>b.classList.toggle('on',b.dataset.ns==k))}
+document.querySelectorAll('[data-ns]').forEach(b=>b.onclick=()=>{const d=$('nsd');d.classList.add('fade');setTimeout(()=>{ns(b.dataset.ns);d.classList.remove('fade')},220)});ns('ns');
+/* ===== smooth UI ===== */
+document.querySelectorAll('.step .txt,.step .vis,.tc').forEach(e=>e.classList.add('rv'));
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.rv').forEach(e=>io.observe(e));
+const nav=document.querySelector('.top'),prog=document.getElementById('prog'),links=[...nav.querySelectorAll('a[href^="#s"]')];
+addEventListener('scroll',()=>{const h=document.documentElement;prog.style.width=(h.scrollTop/(h.scrollHeight-innerHeight)*100)+'%';nav.classList.toggle('sc',h.scrollTop>20);
+ let cur='';document.querySelectorAll('.step').forEach(s=>{if(s.getBoundingClientRect().top<innerHeight*.4)cur=s.id});links.forEach(a=>a.classList.toggle('act',a.getAttribute('href')=='#'+cur))},{passive:true});
+let qs=0,qd=0;document.querySelectorAll('.q').forEach(q=>q.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{if(q.dataset.done)return;q.dataset.done=1;const ok=b.dataset.o==q.dataset.a;b.classList.add(ok?'ok':'no');if(!ok)q.querySelector(`[data-o="${q.dataset.a}"]`).classList.add('ok');q.querySelector('.why').classList.add('show');qd++;if(ok)qs++;document.getElementById('qscore').textContent=`Score: ${qs} / ${qd}`}));
+
+})();
+</script><script>(function(){
+const $=id=>document.getElementById(id),INK='#2b2b2b';
+/* ---------- body lab ---------- */
+const CH={dopamine:{n:'Dopamine',c:'#e8985a',p:'VTA → nucleus accumbens → prefrontal cortex; substantia nigra → striatum',
+d:[[70,14,3.5,-.5,.55,.75,.9,.35],[70,14,3.5,.1,.4,.3,0,.6],[105,18,6,.9,.3,.6,.25,.35]],
+r:['D1/D2 receptors in the nucleus accumbens signal reward and “wanting”; the prefrontal cortex handles focus.','Surges (e.g. stimulants) also release noradrenaline, which widens the pupil (mydriasis).','Indirect: extra noradrenaline stimulates β1 receptors, so the heart speeds up.','Breathing rises with arousal and higher metabolic demand.','Striatal D1/D2 circuits control movement. Too little gives rigidity and a 4–6 Hz resting tremor.','Enteric dopamine neurons help coordinate motility; their loss in Parkinson’s causes constipation. Stimulants suppress appetite.','Dopamine in the accumbens modulates pain; low levels are linked to higher pain sensitivity.'],
+s:['Low (as in Parkinson’s disease): slow, stiff movement, resting tremor, loss of motivation, constipation.','Normal: motivation, reward and smooth, controlled movement.','High (e.g. amphetamine, cocaine): euphoria, fast heart, wide pupils, high energy, no appetite. Chronic excess is linked to psychosis.']},
+serotonin:{n:'Serotonin',c:'#b07fc8',p:'raphe nuclei → cortex, limbic system and spinal cord; ~90% is made in the gut',
+d:[[72,15,3.5,-.6,.6,.35,0,.45],[70,14,3.5,.1,.4,.3,0,.6],[100,20,6,.5,.3,.7,.7,.95]],
+r:['5-HT receptors in raphe–cortex–limbic circuits regulate mood and sleep. “Low serotonin = depression” is a simplification.','Severe excess (serotonin syndrome) dilates the pupils.','Excess raises sympathetic activity: fast pulse and higher blood pressure.','Breathing quickens with fever and agitation in severe excess.','Spinal 5-HT2A activation causes hyperreflexia, tremor and clonus in severe excess.','5-HT3/5-HT4 receptors drive peristalsis. Excess causes cramps, nausea and diarrhoea.','Descending serotonin pathways help gate pain in the spinal cord; low levels make pain feel stronger.'],
+s:['Low: low mood, poor sleep, more pain sensitivity, slower gut.','Normal: stable mood, regular sleep and digestion.','High (too many serotonergic drugs): serotonin syndrome with tremor, sweating, fast pulse, wide pupils and diarrhoea. A medical emergency.']},
+endorphin:{n:'Endorphin',c:'#6fae8a',p:'hypothalamus → periaqueductal grey → spinal-cord pain gate (μ-opioid receptors)',
+d:[[74,15,3.5,-.4,.75,.3,0,.6],[70,14,3.5,.1,.4,.3,0,.6],[52,8,1.5,.9,.05,.1,0,.2]],
+r:['μ-opioid receptors (Gi-coupled) hyperpolarise neurons and release dopamine in the reward circuit: calm and euphoria.','μ-receptors in the oculomotor nucleus constrict the pupil (miosis), a classic opioid sign.','Vagal tone rises and sympathetic drive falls, so heart rate and blood pressure drop.','Brainstem μ-receptors blunt the response to CO₂, giving slow, shallow breathing. This is what makes opioid overdose deadly.','Sedation and lower sympathetic drive relax skeletal muscle.','μ-receptors in the gut wall slow peristalsis, causing constipation.','In the spinal cord, endorphins block substance P release, so pain signals are not relayed to the brain.'],
+s:['Low: pain feels sharper and mood drops.','Normal: a mild natural painkiller (the “runner’s high”).','High (like morphine or heroin, which mimic endorphins): pain fades, deep calm, pinpoint pupils, slow heart and breathing, constipation. Dangerous in excess.']},
+adrenaline:{n:'Adrenaline',c:'#d9534f',p:'locus coeruleus → brain; sympathetic nerves → adrenal medulla → blood',
+d:[[62,12,3,-.3,.5,.15,0,.65],[70,14,3.5,.1,.4,.3,0,.6],[130,24,7,-.5,.3,.9,.6,.15]],
+r:['Locus coeruleus noradrenaline raises alertness; the amygdala fear circuit is engaged, which feels like anxiety.','α1 receptors contract the iris dilator muscle, so the pupil widens.','β1 receptors increase pacemaker rate and contraction force; cardiac output can double.','β2 receptors relax bronchial muscle, opening the airways, and breathing speeds up.','β2 receptors widen muscle blood vessels, glycogen is broken down for fuel, and fine tremor can appear.','α and β receptors reduce gut motility and blood flow: digestion pauses.','Stress-induced analgesia: the stress response can temporarily blunt pain.'],
+s:['Low: tiredness, low blood pressure, slow to get going.','Normal: steady alertness.','High (fight or flight): pounding heart, fast breathing, wide pupils, tense muscles, shaking hands and paused digestion.']},
+gaba:{n:'GABA',c:'#6b9ed8',p:'inhibitory interneurons throughout the brain and spinal cord (GABA-A receptors)',
+d:[[85,16,4.5,-.7,.6,.7,.7,.7],[70,14,3.5,.1,.4,.3,0,.6],[58,9,3,.3,.25,.05,.1,.4]],
+r:['GABA-A receptors open Cl⁻ channels and hyperpolarise neurons. Benzodiazepines and alcohol strengthen this brake.','Usually little direct effect; anxiety from low GABA tone can widen pupils via sympathetic arousal.','Less sympathetic arousal slows the heart; low GABA tone gives anxiety and palpitations.','Strong GABA-A enhancement depresses the brainstem breathing centre.','GABA-A in the spinal cord relaxes muscle. Too little inhibition causes tension, tremor and seizures.','Enteric GABA slows motility slightly.','GABA interneurons in the dorsal horn gate pain; enhancing them reduces it.'],
+s:['Low: over-excited circuits give anxiety, tense muscles, tremor and a seizure risk.','Normal: a healthy brake that keeps circuits in balance.','High (benzodiazepines, alcohol, anaesthetics): calm, drowsy, relaxed muscles, slow heart and breathing, poor coordination.']}};
+const K=['hr','rr','pu','sm','pn','mu','tr','gut'],ST=[2.9,3.4,2.4,1,1.2,3.9,3.9,4.4];
+const ORG=[['Brain','sm',1,[130,32]],['Pain','pn',1.2,[56,195]],['Eyes','pu',2.4,[130,49]],['Heart','hr',2.9,[138,168]],['Lungs','rr',3.4,[130,158]],['Muscles','mu',3.9,[66,170]],['Gut','gut',4.4,[130,238]]];
+const RI={Brain:0,Eyes:1,Heart:2,Lungs:3,Muscles:4,Gut:5,Pain:6},LN=['low','normal','high'],MO=['Depressed','Low / anxious','Neutral','Content','Euphoric'];
+const VAL={Brain:c=>MO[Math.max(0,Math.min(4,Math.round((c.sm+1)*2)))]+' mood',Eyes:c=>'pupil '+c.pu.toFixed(1)+' mm',Heart:c=>Math.round(c.hr)+' bpm',Lungs:c=>Math.round(c.rr)+' breaths/min',Muscles:c=>(c.mu>.65?'tense':c.mu<.15?'relaxed / limp':'normal tone')+(c.tr>.4?', tremor':''),Gut:c=>c.gut>.8?'hyperactive':c.gut<.3?'slowed':c.gut<.5?'reduced':'normal motility',Pain:c=>c.pn>.6?'severe pain':c.pn>.3?'moderate pain':c.pn>.12?'mild pain':'pain blocked'};
+const sm=x=>x<=0?0:x>=1?1:x*x*(3-2*x),q=$;
+const W={dopamine:'Dopamine is the brain’s “reward and go” chemical. It makes you want things, keeps you motivated and helps your movements run smoothly.',serotonin:'Serotonin is the “mood and calm” chemical. It helps steer mood, sleep and appetite, and most of it is actually made in your gut.',endorphin:'Endorphins are your body’s own painkillers. They turn pain signals down and bring calm and pleasure (the “runner’s high”).',adrenaline:'Adrenaline is the “fight or flight” chemical. It gets your body ready to fight or run in a split second.',gaba:'GABA is the brain’s main “brake”. It slows nerve cells down so the brain does not get over-excited.'};
+const S2={dopamine:['Too little dopamine (as in Parkinson’s disease): muscles get stiff and shaky, movement slows and nothing feels rewarding.','Normal dopamine: you feel motivated and your movements are smooth.','Too much dopamine (e.g. stimulant drugs): lots of energy, racing heart, wide pupils and no appetite, but you feel restless and on edge.'],serotonin:['Too little: mood drops, sleep suffers, pain feels stronger and digestion slows.','Normal: steady mood, good sleep and healthy digestion.','Far too much (e.g. mixing certain medicines): shaking, sweating, fast heart, wide pupils and diarrhoea. This is an emergency.'],endorphin:['Too little: pain feels sharper and mood drops.','Normal: a gentle natural painkiller.','Very high (like morphine or heroin, which copy endorphins): no pain and deep calm, but tiny pupils and dangerously slow breathing.'],adrenaline:['Too little: you feel tired, weak and slow.','Normal: you are awake and alert.','Too much (fight or flight): pounding heart, fast breathing, wide pupils, tense and shaky muscles, and digestion stops.'],gaba:['Too little brake: anxiety, tense and shaky muscles, and even seizures.','Normal: brain activity stays balanced.','Too much (like alcohol or sleeping pills): sleepy and calm, but slow heart, slow breathing and poor coordination.']};
+Object.keys(CH).forEach(k=>{CH[k].w=W[k];CH[k].s=S2[k]});
+const IC={Brain:'🧠',Eyes:'👁',Heart:'❤️',Lungs:'🫁',Muscles:'💪',Gut:'🍽',Pain:'🩹'};
+const J=(d,a,b,u,dn,s1,s2,s0)=>d>=a?[1,u,s1]:d<=-a?[-1,dn,s2]:[0,'no change',s0];
+const DIR={Brain:(c,b)=>J(c.sm-b.sm,.25,0,'happier','sadder','Mood lifts: you feel happier and more motivated.','Mood drops: you feel low or anxious.','Mood stays about the same.'),Eyes:(c,b)=>J(c.pu-b.pu,.5,0,'wider','smaller','Pupils open wider, as in the dark or when excited.','Pupils shrink to tiny dots.','Pupils stay the same.'),Heart:(c,b)=>J(c.hr-b.hr,4,0,'faster','slower','Heart beats faster to send more blood around.','Heart beats slower and calmer.','Heart rate stays the same.'),Lungs:(c,b)=>J(c.rr-b.rr,1.5,0,'faster','slower','You breathe faster to take in more oxygen.','You breathe slower and shallower.','Breathing stays the same.'),Muscles:(c,b)=>c.tr-b.tr>.3?[1,'shaky','Muscles shake (tremor).']:J(c.mu-b.mu,.2,0,'tenser','relaxed','Muscles tighten, ready for action.','Muscles loosen and relax.','Muscle tone stays normal.'),Gut:(c,b)=>J(c.gut-b.gut,.12,0,'more active','slower','Digestion speeds up (cramps or nausea can follow).','Digestion slows down.','Digestion stays the same.'),Pain:(c,b)=>J(c.pn-b.pn,.1,0,'hurts more','hurts less','The injury hurts more.','The injury hurts less: the pain signal is turned down.','Pain stays the same.')};
+let ck='dopamine',L=1,T=-1,cur={},tt=0,lt=performance.now();
+$('bchips').innerHTML=Object.keys(CH).map(k=>`<button class="btn" data-k="${k}"><i style="background:${CH[k].c}"></i>${CH[k].n}</button>`).join('');
+$('bRows').innerHTML=Object.keys(RI).map(n=>`<div class="or" id="o${n}"><b>${IC[n]} ${n}</b><span><i id="v${n}" style="font-style:normal"></i><em id="d${n}"></em></span><small id="t${n}"></small><details><summary>why does this happen? (science)</summary><div id="y${n}"></div></details></div>`).join('');
+$('bsv').innerHTML=`<defs><linearGradient id="sk" x1="0" x2="1"><stop offset="0" stop-color="#f6dfc9"/><stop offset="1" stop-color="#e9c4a5"/></linearGradient><radialGradient id="pg"><stop offset="0" stop-color="#e03b3b" stop-opacity=".9"/><stop offset="1" stop-color="#e03b3b" stop-opacity="0"/></radialGradient>
+<g id="shp"><ellipse cx="130" cy="46" rx="25" ry="31"/><rect x="118" y="70" width="24" height="28"/><path d="M84 106Q130 92 176 106C182 150 172 196 168 236Q168 266 174 292L86 292Q92 266 92 236C88 196 78 150 84 106Z"/><path id="lgL" d="M88 288C86 330 90 370 94 410C95 440 96 470 96 488C90 500 96 512 112 512C124 512 126 504 124 494C123 470 124 440 128 410C132 370 132 330 131 292Z"/><use href="#lgL" transform="translate(260 0) scale(-1 1)"/></g>
+<path id="armL" d="M86 110C70 112 60 128 56 152C52 176 48 200 44 224C41 234 44 240 40 250C38 258 46 262 50 256L54 248C58 256 66 254 64 246L70 226C76 200 82 176 90 150Z"/><path id="qL" d="M96 300C92 330 94 360 98 374C108 368 118 340 120 300Z"/></defs>
+<use href="#shp" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="3.5" stroke-linejoin="round"/><use href="#shp" fill="url(#sk)"/>
+<g id="mq" fill="#c0504d"><use href="#qL"/><use href="#qL" transform="translate(260 0) scale(-1 1)"/></g>
+<path d="M130 76V262" stroke="#f2d56b" stroke-width="5" stroke-linecap="round"/><path d="M130 262L124 290M130 262L136 290" stroke="#f2d56b" stroke-width="1.3"/>
+<path d="M130 94V124M130 124L118 140M130 124L142 140" stroke="#d9b5a8" stroke-width="3" fill="none"/>
+<path id="lu1" d="M126 122C108 116 92 134 93 164C94 186 106 194 120 188C126 184 127 150 126 122Z" fill="#f4a9a4" stroke="#c97a76"/><path id="lu2" d="M134 122C152 116 168 134 167 164C166 186 154 194 140 188C134 184 133 150 134 122Z" fill="#f4a9a4" stroke="#c97a76"/>
+<path d="M92 200C108 192 132 197 134 208C130 222 110 228 96 220C90 214 90 206 92 200Z" fill="#9a4a38"/><path d="M140 196C162 192 170 210 160 226C152 236 138 232 140 220C142 212 136 204 140 196Z" fill="#e29a7a" stroke="#b86a4a"/>
+<path d="M100 248Q112 238 122 250T144 250T160 252T140 268T116 264T102 264" stroke="#e6a984" stroke-width="8" fill="none" stroke-linecap="round"/><path id="gt" d="M100 248Q112 238 122 250T144 250T160 252T140 268T116 264T102 264" stroke="#fbe0c4" stroke-width="2" fill="none" stroke-dasharray="4 7"/>
+<g id="he"><path d="M0 14C-22-4-16-24 0-12C16-24 22-4 0 14Z" fill="#c8352f" stroke="#7a1f1c"/><path d="M-3-12C-2-26 8-26 10-18" stroke="#c8352f" stroke-width="3" fill="none"/></g>
+<circle id="gl" cx="130" cy="32" r="30" fill="#e8985a" opacity="0"/><ellipse cx="130" cy="32" rx="22" ry="14" fill="#e9a3b0" stroke="#b86a7b"/><path d="M112 30Q120 22 128 30T146 28M114 38Q124 32 132 38T148 36" stroke="#b86a7b" fill="none"/><ellipse cx="130" cy="52" rx="10" ry="5" fill="#d98b9a" stroke="#b86a7b" opacity=".9"/>
+<ellipse cx="120" cy="50" rx="5.5" ry="3.3" fill="#fff" stroke="#2b2b2b" stroke-width=".8"/><ellipse cx="140" cy="50" rx="5.5" ry="3.3" fill="#fff" stroke="#2b2b2b" stroke-width=".8"/><circle id="e1" cx="120" cy="50" r="2" fill="#2b2b2b"/><circle id="e2" cx="140" cy="50" r="2" fill="#2b2b2b"/><path id="mo" d="" stroke="#8a4a3a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<g id="aL"><use href="#armL" fill="url(#sk)" stroke="#2b2b2b" stroke-width="1.6"/><path id="mL" d="M80 130C70 140 64 160 66 178C74 176 82 160 86 140Z" fill="#c0504d"/><circle id="pn" cx="56" cy="195" r="0" fill="url(#pg)"/><path d="M51 191L60 199M60 191L51 199" stroke="#7a1f1c" stroke-width="1.6"/></g>
+<g id="aR"><g transform="translate(260 0) scale(-1 1)"><use href="#armL" fill="url(#sk)" stroke="#2b2b2b" stroke-width="1.6"/><path id="mR" d="M80 130C70 140 64 160 66 178C74 176 82 160 86 140Z" fill="#c0504d"/></g></g>
+<circle id="pu" cx="130" cy="76" r="5" fill="#f6cf5f" stroke="#2b2b2b" opacity="0"/><circle id="rg" r="18" fill="none" stroke="#e8985a" stroke-width="2.5" opacity="0"/><text id="rt" font-family="JetBrains Mono,monospace" font-size="10" fill="#2b2b2b" text-anchor="middle"></text>
+<text x="46" y="270" font-family="JetBrains Mono,monospace" font-size="8" fill="#7a1f1c">injury</text><g font-family="Inter,sans-serif" font-size="11" font-weight="600"><text id="bdBrain" x="160" y="26"/><text id="bdEyes" x="160" y="58"/><text id="bdHeart" x="162" y="178"/><text id="bdLungs" x="172" y="146"/><text id="bdMuscles" x="138" y="340"/><text id="bdGut" x="166" y="252"/><text id="bdPain" x="6" y="286"/></g>
+<g transform="translate(255 40)"><circle r="26" fill="#fff" stroke="#2b2b2b"/><circle r="17" fill="#7a5a3a"/><circle id="ip" r="5" fill="#111"/><text y="42" font-family="JetBrains Mono,monospace" font-size="9" text-anchor="middle" fill="#6f6a62">eye close-up</text></g>`;(()=>{const d=$('bsv').querySelector('defs'),g=document.createElementNS('http://www.w3.org/2000/svg','svg');g.setAttribute('width','0');g.setAttribute('height','0');g.style.cssText='position:absolute;pointer-events:none';g.appendChild(d);document.body.insertBefore(g,document.body.firstChild)})();
+document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ck=b.dataset.k;T=-1;ui()});
+document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L=+b.dataset.l;T=-1;ui()});
+$('bRel').onclick=()=>{T=0};$('bRst').onclick=()=>{T=-1;ui()};
+function ui(){document.querySelectorAll('[data-k]').forEach(b=>b.classList.toggle('on',b.dataset.k==ck));document.querySelectorAll('[data-l]').forEach(b=>b.classList.toggle('on',+b.dataset.l==L));$('bN').textContent=CH[ck].n;$('bWh').textContent=CH[ck].w;Object.keys(RI).forEach(n=>$('y'+n).textContent=CH[ck].r[RI[n]]);$('bPath').textContent='Pathway: '+CH[ck].p;q('gl').setAttribute('fill',CH[ck].c);q('pu').setAttribute('fill',CH[ck].c);q('rg').setAttribute('stroke',CH[ck].c)}
+ui();
+function fr(now){requestAnimationFrame(fr);const dt=Math.min((now-lt)/1000,.05);lt=now;tt+=dt;if(T>=0&&T<8)T+=dt;
+ const C=CH[ck],B=C.d[1],G=C.d[L];K.forEach((k,i)=>{const e=T<0?0:sm((T-ST[i])/1.3);cur[k]=B[i]+(G[i]-B[i])*e});
+ const bpm=cur.hr,hb=Math.pow(Math.max(0,Math.sin(tt*bpm/60*6.283)),4),br=1+.06*Math.sin(tt*cur.rr/60*6.283);
+ q('he').setAttribute('transform',`translate(138 168) scale(${1.1+.28*hb})`);
+ ['lu1','lu2'].forEach(i=>q(i).setAttribute('transform',`translate(130 158) scale(${br} ${br}) translate(-130 -158)`));
+ const e1=Math.sin(tt*3);q('gl').setAttribute('opacity',T<0?0:(.55*sm(T/1.2)*(1-.3*sm((T-5)/2))+.08*e1).toFixed(2));
+ const pr=cur.pu*1.42;['e1','e2'].forEach(i=>q(i).setAttribute('r',Math.max(.8,pr*.7)));q('ip').setAttribute('r',pr);
+ q('mo').setAttribute('d',`M121 65Q130 ${65+cur.sm*8} 139 65`);
+ const sh=Math.sin(tt*37)*cur.tr*4,m=.08+.85*cur.mu,ang=4+cur.mu*8;
+ ['mL','mR'].forEach(i=>q(i).setAttribute('opacity',m));q('mq').setAttribute('opacity',m*.8);
+ q('aL').setAttribute('transform',`rotate(${ang+sh} 86 110)`);q('aR').setAttribute('transform',`rotate(${-ang-sh} 174 110)`);
+ q('pn').setAttribute('r',cur.pn*24*(1+.12*Math.sin(tt*8)));
+ q('gt').setAttribute('stroke-dashoffset',-tt*cur.gut*40);
+ let act=null;if(T>=0)ORG.forEach(o=>{if(T>=o[2])act=o});
+ const pu=q('pu');if(T>=1.2&&T<2.4){pu.setAttribute('opacity',1);pu.setAttribute('cy',78+(T-1.2)/1.2*184)}else pu.setAttribute('opacity',0);
+ const rg=q('rg');if(act&&T<7){rg.setAttribute('opacity',.8);rg.setAttribute('cx',act[3][0]);rg.setAttribute('cy',act[3][1]);rg.setAttribute('r',16+2*e1)}else rg.setAttribute('opacity',0);
+ const rt=q('rt');rt.textContent=act&&T<7?act[0]:'';if(act){rt.setAttribute('x',Math.min(250,Math.max(30,act[3][0])));rt.setAttribute('y',act[3][1]-22)}
+ const bb={};K.forEach((k,i)=>bb[k]=B[i]);
+ ORG.forEach(o=>{const n=o[0],r=$('o'+n),on=T>=0&&T>=o[2],f=on?DIR[n](cur,bb):[0,'no change',''];r.classList.toggle('on',T<0||on);r.classList.toggle('now',!!act&&act[0]==n&&T<7);$('v'+n).textContent=on?VAL[n](bb)+' → '+VAL[n](cur):VAL[n](bb);const em=$('d'+n);em.textContent=on?(f[0]>0?'▲ ':f[0]<0?'▼ ':'● ')+f[1]:'';em.className=f[0]>0?'up':f[0]<0?'dn':'';$('t'+n).textContent=on?f[2]:'';const bd=$('bd'+n);bd.textContent=on&&f[0]?(f[0]>0?'▲ ':'▼ ')+f[1]:'';bd.setAttribute('fill',f[0]>0?'#c9561a':'#2f6db5')});
+ $('bPh').textContent=T<0?`The body is at rest (normal). Chosen: ${LN[L]} ${C.n}. Press “Release chemical” to see what changes.`:T<1?`${C.n} is released by nerve cells in the brain${ck=='adrenaline'?' and by the adrenal glands into the blood':''}.`:T<2.4?'The message travels down the spinal cord and nerves to the organs.':T<7?`Now it reaches the ${act[0].toLowerCase()}…`:`Done. Compare each row: normal → with ${C.n} (${LN[L]}).`;
+ $('bSum').textContent=T>=7?'Result: '+C.s[L]:'';$('bSum').style.display=T>=7?'block':'none'}
+requestAnimationFrame(fr);
+
+window.showPane=(k,sc)=>{['build','body','chem'].forEach(x=>$('pane-'+x).classList.toggle('on',x==k));document.querySelectorAll('.ptab').forEach(b=>b.classList.toggle('on',b.dataset.pane==k));document.querySelectorAll('[data-tp]').forEach(d=>d.classList.toggle('on',d.dataset.tp==k));if(k=='build')dispatchEvent(new Event('resize'));if(sc!==false)$('ptabs').scrollIntoView({behavior:'smooth',block:'start'})};
+document.querySelectorAll('[data-pane]').forEach(b=>b.addEventListener('click',()=>showPane(b.dataset.pane)));
+$('bFireAgain').onclick=()=>$('bFireN').click();
+/* ---------- circuit -> body ---------- */
+const X={touch:0,cord:0,ctx:0,rew:0,calm:0,relax:0,sync:0,c:[0,0]};const MA={};let nbL=[],nbLs='',nbV='',nlt=performance.now(),nbT=0;
+const SYN=[['Excitatory · glutamate','The brain’s main “go” signal. It pushes the next neuron toward its firing threshold.','The message passes on, so the sensation or movement continues. Several weak inputs can add up and make a muscle move.'],['Inhibitory · GABA','The brain’s main “brake”. It pushes the next neuron away from firing.','Signals are blocked: a muscle stays relaxed, a pain signal is turned down and the brain calms. Too little GABA causes tremor and seizures.'],['Excitatory · acetylcholine','The messenger between motor neurons and muscles; also used for attention and memory.','At a motor neuron it gives a strong, fast push, so the muscle contracts firmly (the arm moves harder).'],['Modulatory · dopamine','It does not fire the next cell directly. It changes how strongly cells respond (reward and movement circuits).','Mood lifts, motivation rises and the next movements are stronger and smoother. Too little gives stiff, shaky movement.'],['Modulatory · serotonin','A slow modulator of mood, sleep and calm.','You feel calmer, the heartbeat slows a little and digestion becomes more active.'],['Electrical · gap junction','Cells joined by tiny channels, so current flows straight through with no chemical delay.','Cells fire almost instantly and in sync, like heart muscle cells beating together.']];
+const CHP=[['touch','Sensation felt'],['cord','Spinal processing'],['ctx','Cortex active'],['mus','Muscle contracting'],['relax','Muscle blocked'],['rew','Reward / mood up'],['calm','Calm'],['sync','Synced firing']];
+$('nbChips').innerHTML=CHP.map(c=>`<span class="chp" id="nc_${c[0]}">${c[1]}</span>`).join('');
+function lg(t){if(t==nbLs)return;nbLs=t;nbL.unshift(t);nbL=nbL.slice(0,5);$('nbLog').innerHTML=nbL.map((x,i)=>`<div style="opacity:${1-i*.16}">${x}</div>`).join('')}
+window.NL={fire(n){if(n.type=='sensory'){X.touch=1;lg('👆 Sensory neuron fired: the hand detected a stimulus (touch or pain).')}else if(n.type=='inter'){X.cord=1;lg('⚙️ Interneuron fired: the spinal cord is processing the signal.')}else if(n.type=='pyr'){X.ctx=1;lg('🧠 Pyramidal neuron fired: the cerebral cortex is active (deciding, planning).')}else{const i=(MA[n.id]!==undefined?MA[n.id]:(MA[n.id]=Object.keys(MA).length))%2;let a=1+(X.rew>.3?.3:0)+(X.strong?.2:0);if(X.relax>.4){a=.2;lg('🛑 Motor neuron fired only weakly: the GABA brake is still on, so the muscle barely moves.')}else lg('💪 Motor neuron fired → acetylcholine → the '+(i?'right':'left')+' arm muscle contracts.');X.c[i]=Math.max(X.c[i],a)}},
+arrive(e,m){const t=m.type;if(e.k=='inh'){if(t=='motor'){X.relax=1;lg('🛑 GABA reached the motor neuron: it is pushed away from firing, so the muscle stays relaxed.')}else if(t=='sensory'){X.touch*=.3;lg('🛑 GABA reached the sensory neuron: the pain/touch signal is turned down (like the spinal “pain gate”).')}else{X.calm=1;lg('🛑 GABA reached a '+(t=='pyr'?'pyramidal':'inter')+'neuron: brain activity is calmed.')}}else if(e.nt=='da'){X.rew=1;lg('😊 Dopamine arrived: reward and motivation rise; mood lifts and movements get stronger.')}else if(e.nt=='5ht'){X.calm=1;lg('😌 Serotonin arrived: mood turns calmer, the heartbeat slows a little, digestion becomes more active.')}else if(e.k=='elec'){X.sync=1;lg('⚡ Electrical synapse: the signal crossed instantly with no chemical delay, so cells fire together.')}else if(e.nt=='ach'&&t=='motor'){X.strong=1;lg('💪 Acetylcholine reached a motor neuron: a strong, fast push, so the next contraction is firmer.')}}};
+const ARM='<use href="#armL" fill="url(#sk)" stroke="#2b2b2b" stroke-width="1.6"/><path d="M80 130C70 140 64 160 66 178C74 176 82 160 86 140Z" fill="#c0504d" class="nm"/>';
+$('nbs').innerHTML=`<use href="#shp" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="3.5" stroke-linejoin="round"/><use href="#shp" fill="url(#sk)"/><path id="nbCd" d="M130 76V262" stroke="#f2d56b" stroke-width="5" stroke-linecap="round"/><circle id="nbGl" cx="130" cy="32" r="30" fill="#e8985a" opacity="0"/><ellipse cx="130" cy="32" rx="22" ry="14" fill="#e9a3b0" stroke="#b86a7b"/><path d="M112 30Q120 22 128 30T146 28M114 38Q124 32 132 38T148 36" stroke="#b86a7b" fill="none"/><ellipse cx="120" cy="50" rx="5.5" ry="3.3" fill="#fff" stroke="#2b2b2b" stroke-width=".8"/><ellipse cx="140" cy="50" rx="5.5" ry="3.3" fill="#fff" stroke="#2b2b2b" stroke-width=".8"/><circle cx="120" cy="50" r="2.3" fill="#2b2b2b"/><circle cx="140" cy="50" r="2.3" fill="#2b2b2b"/><path id="nbMo" d="" stroke="#8a4a3a" stroke-width="1.8" fill="none" stroke-linecap="round"/><g id="nbHe"><path d="M0 14C-22-4-16-24 0-12C16-24 22-4 0 14Z" fill="#c8352f" stroke="#7a1f1c"/></g>
+<g id="nbAL">${ARM}<circle id="nbTc" cx="47" cy="248" r="0" fill="url(#pg)"/></g><g id="nbAR"><g transform="translate(260 0) scale(-1 1)">${ARM}</g></g>
+<g font-family="JetBrains Mono,monospace" font-size="8" fill="#6f6a62"><text x="22" y="282">hand (stimulus)</text><text x="150" y="12">cortex</text><text x="136" y="100">spinal cord</text></g>`;
+function nbf(now){requestAnimationFrame(nbf);const dt=Math.min((now-nlt)/1000,.05);nlt=now;nbT+=dt;
+ const v=$('bSyn').value;if(v!==nbV){nbV=v;const q=SYN[+v]||SYN[0];$('nbSyn').innerHTML=`<b>Selected synapse: ${q[0]}</b>${q[1]}<br><u>In the body:</u> ${q[2]}`}
+ ['touch','cord','ctx','sync'].forEach(k=>X[k]*=Math.exp(-dt*(k=='touch'?.5:1.4)));X.rew*=Math.exp(-dt*.2);X.calm*=Math.exp(-dt*.25);X.relax*=Math.exp(-dt*.4);X.c=X.c.map(c=>c*Math.exp(-dt*1.3));
+ const mx=Math.max(X.ctx,X.rew,X.calm);$('nbGl').setAttribute('fill',X.rew>=X.ctx&&X.rew>=X.calm?'#f6cf5f':X.calm>X.ctx?'#6b9ed8':'#e8985a');$('nbGl').setAttribute('opacity',(mx*.7).toFixed(2));
+ $('nbCd').setAttribute('stroke',X.cord>.15?'#e8985a':'#f2d56b');$('nbCd').setAttribute('stroke-width',5+X.cord*4);
+ const base=X.relax>.3?0:4;$('nbAL').setAttribute('transform',`rotate(${base+X.c[0]*40} 86 110)`);$('nbAR').setAttribute('transform',`rotate(${-base-X.c[1]*40} 174 110)`);
+ document.querySelectorAll('#nbAL .nm').forEach(e=>e.setAttribute('opacity',X.relax>.3?.05:.08+.85*X.c[0]));document.querySelectorAll('#nbAR .nm').forEach(e=>e.setAttribute('opacity',X.relax>.3?.05:.08+.85*X.c[1]));
+ $('nbTc').setAttribute('r',X.touch*22);
+ const bpm=70+X.touch*15+X.rew*10+(X.c[0]+X.c[1])*8-X.calm*8,hb=Math.pow(Math.max(0,Math.sin(nbT*bpm/60*6.283)),4);$('nbHe').setAttribute('transform',`translate(138 168) scale(${1.1+.28*hb+.3*X.sync})`);
+ const sm=X.rew+X.calm*.7-X.touch*.5;$('nbMo').setAttribute('d',`M121 65Q130 ${65+sm*8} 139 65`);
+ const on={touch:X.touch,cord:X.cord,ctx:X.ctx,mus:Math.max(...X.c),relax:X.relax,rew:X.rew,calm:X.calm,sync:X.sync};CHP.forEach(c=>$('nc_'+c[0]).classList.toggle('on',on[c[0]]>.25))}
+requestAnimationFrame(nbf);
+/* ---------- nervous system map ---------- */
+(function(){const mir=d=>d.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g,(m,x,y)=>(260-x)+' '+y),pp=(d,a)=>`<path d="${d}" ${a}/><path d="${mir(d)}" ${a}/>`;
+const lab=[['Brain & cerebellum','brain',28,150,34,'#b86a7b'],['Vagus nerve (CN X)','par',84,128,90,'#4a7fc0'],['Brachial plexus → arm nerves','som',118,178,118,'#b8892a'],['Sympathetic chain','sym',160,139,160,'#c9772f'],['Spinal cord (to ~L1–L2)','cord',205,131,205,'#a8902a'],['Enteric nervous system','ent',247,160,247,'#3f8a63'],['Sciatic nerve','som',340,153,340,'#b8892a']];
+$('nsmap').innerHTML=`<use href="#shp" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="3.5" stroke-linejoin="round"/><use href="#shp" fill="#f6ecdf"/><use href="#armL" fill="#f6ecdf" stroke="#2b2b2b" stroke-width="1.5"/><use href="#armL" transform="translate(260 0) scale(-1 1)" fill="#f6ecdf" stroke="#2b2b2b" stroke-width="1.5"/>
+<g data-p="ent" fill="none" stroke="#6fae8a" stroke-width="4" stroke-linecap="round"><path d="M100 248Q112 238 122 250T144 250T160 252T140 268T116 264T102 264"/><path d="M140 196C162 192 170 210 160 226C152 236 138 232 140 220" /></g>
+<g data-p="som" fill="none" stroke="#e5b84a" stroke-width="2.4" stroke-linecap="round">${pp('M130 106Q104 106 86 122Q66 160 58 200L50 246','')}${pp('M86 122Q74 170 66 226','')}${pp('M130 296Q108 330 102 400Q100 450 104 500','')}${pp('M130 296Q118 340 118 410','')}</g>
+<g data-p="par" fill="none" stroke="#4a7fc0" stroke-width="2.6" stroke-linecap="round">${pp('M126 58Q122 90 120 120Q114 160 120 196Q124 216 134 226','')}</g>
+<g data-p="sym" fill="none" stroke="#e8985a" stroke-width="4" stroke-linecap="round" stroke-dasharray="0.1 6"><path d="M121 98V262"/><path d="M139 98V262"/></g>
+<g data-p="cord"><path d="M130 58V262" stroke="#f2d56b" stroke-width="6" stroke-linecap="round"/><path d="M130 262L121 294M130 262L126 297M130 262L134 297M130 262L139 294" stroke="#f2d56b" stroke-width="1.3"/></g>
+<g data-p="brain"><ellipse cx="130" cy="32" rx="22" ry="14" fill="#e9a3b0" stroke="#b86a7b"/><path d="M112 30Q120 22 128 30T146 28M114 38Q124 32 132 38T148 36" stroke="#b86a7b" fill="none"/><ellipse cx="130" cy="52" rx="10" ry="5" fill="#d98b9a" stroke="#b86a7b"/></g>`+lab.map(l=>`<g data-p="${l[1]}"><line x1="${l[3]}" y1="${l[4]}" x2="226" y2="${l[2]}" stroke="#c9c1ae"/><text x="230" y="${l[2]+3}" font-family="Newsreader,serif" font-style="italic" font-size="13" fill="${l[5]}">${l[0]}</text></g>`).join('');
+const sv=$('nsmap');sv.querySelectorAll('path').forEach(el=>{if(el.closest('[data-p]')&&el.getAttribute('stroke')){const c=el.cloneNode();c.setAttribute('stroke','transparent');c.setAttribute('stroke-width','14');c.removeAttribute('stroke-dasharray');c.setAttribute('fill','none');el.parentNode.insertBefore(c,el)}});
+const S={cns:['brain','cord'],pns:['som','par','sym','ent'],aut:['par','sym']};
+function hl(k){const set=k=='ns'?null:S[k]||[k];sv.querySelectorAll('[data-p]').forEach(e=>{e.classList.toggle('nsel',!set||set.includes(e.dataset.p))})}
+sv.addEventListener('click',e=>{const t=e.target.closest('[data-p]');if(t){const b=document.querySelector(`[data-ns="${t.dataset.p}"]`);if(b)b.click()}});
+document.querySelectorAll('[data-ns]').forEach(b=>b.addEventListener('click',()=>hl(b.dataset.ns)));hl('ns')})();
+})();</script><script>(()=>{const n=document.getElementById('topnav'),b=document.getElementById('burger'),c=()=>{n.classList.remove('open');b.setAttribute('aria-expanded','false')};
+b.onclick=e=>{e.stopPropagation();const o=n.classList.toggle('open');b.setAttribute('aria-expanded',o)};
+n.querySelectorAll('.links a').forEach(a=>a.addEventListener('click',c));
+document.getElementById('bFull3').onclick=()=>{c();document.getElementById('bFull2').click()};
+document.addEventListener('click',e=>{if(!n.contains(e.target))c()});addEventListener('keydown',e=>{if(e.key=='Escape')c()});addEventListener('resize',()=>{if(innerWidth>1000)c()})})();</script></body></html>
